@@ -1,46 +1,45 @@
 namespace test
 
 inductive nat : Type
-| zero : nat
-| succ : nat → nat
-
-def succ : nat → nat := nat.succ
+  | zero : nat
+  | succ : nat → nat
+open nat
 
 def rec {t : Type} (z : t) (f : nat → t → t) : nat → t
-| nat.zero => z
-| (nat.succ n) => f n (rec z f n)
+  | nat.zero => z
+  | (nat.succ n) => f n (rec z f n)
 
 def Nat_of_nat : Nat → nat
-| Nat.zero => nat.zero
-| (Nat.succ n) => nat.succ (Nat_of_nat n)
+  | Nat.zero => nat.zero
+  | (Nat.succ n) => nat.succ (Nat_of_nat n)
 
 instance {n : Nat} : OfNat nat n where
   ofNat := Nat_of_nat n
 
 -----
 
-def Prop_of_nat : nat → Prop
+def Pf : nat → Prop
 | 1 => True
 | _ => False
 
 instance : CoeSort nat Prop where
-  coe := Prop_of_nat
+  coe := Pf
 
 theorem triv : (1 : nat) := trivial
 
 theorem elim {P : Prop} (h : (0 : nat)) : P := by cases h
 
-theorem psub {n : nat} (P : nat → Prop) (h₁ : n) (h₂ : P 1) : P n := by
+theorem psub (n : nat) (P : nat → Prop) (h₁ : n) (h₂ : P 1) : P n := by
   match n with
   | 0 => cases h₁
   | 1 => exact h₂
   | nat.succ (nat.succ _) => cases h₁
 
-theorem ind {n : nat} (P : nat → Prop) (h₁ : P 0)
-(h₂ : ∀ {n : nat}, P n → P (succ n)) : P n := by
+theorem ind (n : nat) (P : nat → Prop) (h₁ : P 0)
+(h₂ : (n : nat) → P n → P (succ n)) : P n := by
   induction n with
   | zero => exact h₁
-  | succ n ih => exact h₂ ih
+  | succ n ih => exact h₂ n ih
 
 -----
 
@@ -82,24 +81,35 @@ rec not (λ n f k => ite k (f (pred k)) 0) a b
 
 -----
 
-theorem elim' : ∀ {P : Prop} {n : nat}, succ (succ n) → P :=
-λ h => elim (id psub (λ x => not (pred x)) h triv)
+theorem elim' {P : Prop} {n : nat} (h : succ (succ n)) : P := by
+  apply elim
+  apply psub _ (λ n => not (pred n)) h triv
 
-theorem cs : ∀ {n : nat} (P : nat → Prop), P 0 → (∀ {n : nat}, P (succ n)) → P n :=
-λ P h₁ h₂ => ind P h₁ (λ h₃ => h₂)
+theorem cs (n : nat) (P : nat → Prop) (h₁ : P 0)
+(h₂ : (n : nat) → P (succ n)) : P n := by
+  induction n using ind with
+  | h₁ => exact h₁
+  | h₂ => apply h₂
 
-theorem psub' : ∀ {n : nat} (P : nat → Prop), n → P n → P 1 :=
-λ P => cs (λ x => x → P x → P 1) (λ h => elim h)
-(cs (λ x => succ x → P (succ x) → P 1) (λ h₁ h₂ => h₂) (λ h₁ => elim' h₁))
+theorem psub' {n : nat} (P : nat → Prop) (h₁ : n) (h₂ : P n) : P 1 := by
+  induction n using cs with
+  | h₁ => apply elim h₁
+  | h₂ n => induction n using cs with
+    | h₁ => apply h₂
+    | h₂ => apply elim' h₁
 
-theorem prop_cs : ∀ {n : nat} (P : nat → Prop), P true → P false → prop n → P n :=
-λ P h₁ h₂ => cs (λ x => prop x → P x) (λ _ => h₂)
-(cs (λ x => prop (succ x) → P (succ x)) (λ _ => h₁) elim)
+theorem prop_cs {n : nat} (P : nat → Prop)
+(h₁ : P true) (h₂ : P false) (h₃ : prop n) : P n := by
+  induction n using cs with
+  | h₁ => apply h₂
+  | h₂ n => induction n using cs with
+    | h₁ => apply h₁
+    | h₂ n => apply elim h₃
 
-theorem imp_intro : ∀ {P Q : nat}, prop P → prop Q → (P → Q) → imp P Q :=
+theorem imp_intro {P Q : nat}, prop P → prop Q → (P → Q) → imp P Q :=
 @λ P Q hp hq => prop_cs (λ x => (x → Q) → imp x Q) (λ h => h triv) (λ h => triv) hp
 
-theorem imp_elim : ∀ {P Q : nat}, prop P → prop Q → imp P Q → P → Q :=
+theorem imp_elim {P Q : nat}, prop P → prop Q → imp P Q → P → Q :=
 @λ P Q hp hq h₁ h₂ => psub' (λ x => imp x Q) h₂ h₁
 
 theorem eq_refl : ∀ {a : nat}, nat_eq a a :=
