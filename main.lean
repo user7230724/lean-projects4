@@ -1,3 +1,5 @@
+namespace test
+
 inductive nat : Type
 | zero : nat
 | succ : nat → nat
@@ -17,26 +19,28 @@ instance {n : Nat} : OfNat nat n where
 
 -----
 
+def Prop_of_nat : nat → Prop
+| 1 => True
+| _ => False
+
 instance : CoeSort nat Prop where
-  coe := fun
-  | 1 => True
-  | _ => False
+  coe := Prop_of_nat
 
 theorem triv : (1 : nat) := trivial
 
 theorem elim {P : Prop} (h : (0 : nat)) : P := by cases h
 
 theorem psub {n : nat} (P : nat → Prop) (h₁ : n) (h₂ : P 1) : P n := by
-  cases n with
-  | succ zero => exact h₂
-  | _ => cases h₁
+  match n with
+  | 0 => cases h₁
+  | 1 => exact h₂
+  | nat.succ (nat.succ _) => cases h₁
 
-theorem ind (P : nat → Prop) (h₁ : P 0) (h₂ : ∀ {n : nat}, P n → P (succ n)) ⦃n : nat⦄ : P n :=
-begin
-  induction n with n ih,
-  { exact h₁ },
-  { exact h₂ ih },
-end
+theorem ind {n : nat} (P : nat → Prop) (h₁ : P 0)
+(h₂ : ∀ {n : nat}, P n → P (succ n)) : P n := by
+  induction n with
+  | zero => exact h₁
+  | succ n ih => exact h₂ ih
 
 -----
 
@@ -44,7 +48,7 @@ def id' {t : Type} (a : t) : t := a
 def const {t s : Type} (a : t) (b : s) : t := a
 
 def cases {t : Type} (z : t) (f : nat → t) (n : nat) : t :=
-rec z (λ k _, f k) n
+rec z (λ k _ => f k) n
 
 def pred (n : nat) : nat :=
 cases 0 id n
@@ -74,42 +78,42 @@ def iff (P Q : nat) : nat :=
 ite P Q (not Q)
 
 def nat_eq (a b : nat) : nat :=
-rec not (λ n f k, ite k (f (pred k)) 0) a b
+rec not (λ n f k => ite k (f (pred k)) 0) a b
 
 -----
 
 theorem elim' : ∀ {P : Prop} {n : nat}, succ (succ n) → P :=
-λ P n h, elim (id psub (λ x, not (pred x)) h triv)
+λ h => elim (id psub (λ x => not (pred x)) h triv)
 
-theorem cs : ∀ (P : nat → Prop), P 0 → (∀ {n : nat}, P (succ n)) → ∀ ⦃n : nat⦄, P n :=
-λ P h₁ h₂, ind P h₁ (λ n h₃, h₂)
+theorem cs : ∀ {n : nat} (P : nat → Prop), P 0 → (∀ {n : nat}, P (succ n)) → P n :=
+λ P h₁ h₂ => ind P h₁ (λ h₃ => h₂)
 
-theorem psub' : ∀ (P : nat → Prop) ⦃n : nat⦄, n → P n → P 1 :=
-λ P, cs (λ x, x → P x → P 1) (λ h, elim h)
-(cs (λ x, succ x → P (succ x) → P 1) (λ h₁ h₂, h₂) (λ n h₁, elim' h₁))
+theorem psub' : ∀ {n : nat} (P : nat → Prop), n → P n → P 1 :=
+λ P => cs (λ x => x → P x → P 1) (λ h => elim h)
+(cs (λ x => succ x → P (succ x) → P 1) (λ h₁ h₂ => h₂) (λ h₁ => elim' h₁))
 
-theorem prop_cs : ∀ (P : nat → Prop), P true → P false → ∀ ⦃n : nat⦄, prop n → P n :=
-λ P h₁ h₂, cs (λ x, prop x → P x) (λ _, h₂)
-(cs (λ x, prop (succ x) → P (succ x)) (λ _, h₁) (λ n h₃, elim h₃))
+theorem prop_cs : ∀ {n : nat} (P : nat → Prop), P true → P false → prop n → P n :=
+λ P h₁ h₂ => cs (λ x => prop x → P x) (λ _ => h₂)
+(cs (λ x => prop (succ x) → P (succ x)) (λ _ => h₁) elim)
 
 theorem imp_intro : ∀ {P Q : nat}, prop P → prop Q → (P → Q) → imp P Q :=
-λ P Q hp hq, prop_cs (λ x, (x → Q) → imp x Q) (λ h, h triv) (λ h, triv) hp
+@λ P Q hp hq => prop_cs (λ x => (x → Q) → imp x Q) (λ h => h triv) (λ h => triv) hp
 
 theorem imp_elim : ∀ {P Q : nat}, prop P → prop Q → imp P Q → P → Q :=
-λ P Q _ _ h₁ h₂, psub' (λ x, imp x Q) h₂ h₁
+@λ P Q hp hq h₁ h₂ => psub' (λ x => imp x Q) h₂ h₁
 
 theorem eq_refl : ∀ {a : nat}, nat_eq a a :=
-ind (λ x, nat_eq x x) triv (λ n ih, ih)
+ind (λ x => nat_eq x x) triv id
 
 theorem prop_prop : ∀ {a : nat}, prop (prop a) :=
-cs (λ x, prop (prop x)) triv (cs (λ x, prop (prop (succ x))) triv (λ n, triv))
+cs (λ x => prop (prop x)) triv (cs (λ x => prop (prop (succ x))) triv triv)
 
 theorem prop_not : ∀ {a : nat}, prop (not a) :=
-cs (λ x, prop (not x)) triv (λ a, triv)
+cs (λ x => prop (not x)) triv triv
 
-theorem nat_eq_type : ∀ {a b : nat}, prop (nat_eq a b) :=
-ind (λ x, ∀ b, prop (nat_eq x b)) @prop_not
-(λ a ih, cs (λ x, prop (nat_eq (succ a) x)) triv (λ b, ih))
+-- theorem nat_eq_type : ∀ (a b : nat), prop (nat_eq a b) :=
+-- λ a => ind (λ x => ∀ b, prop (nat_eq x b)) @prop_not
+-- (@λ a ih b => cs (λ x => prop (nat_eq (succ a) x)) triv (ih (succ b)))
 
 theorem not_type : ∀ {a : nat}, prop a → prop (not a) :=
 λ a _, prop_not
@@ -208,3 +212,5 @@ by apply eq_sub (λ x, nat_eq x a) h eq_refl
 
 theorem eq_tran {a b c : nat} (h₁ : nat_eq a b) (h₂ : nat_eq b c) : nat_eq a c :=
 by apply eq_sub _ (eq_symm h₁) h₂
+
+end test
