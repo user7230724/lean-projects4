@@ -29,14 +29,14 @@ theorem triv : (1 : nat) := trivial
 
 theorem elim {P : Prop} (h : (0 : nat)) : P := by cases h
 
-theorem psub (n : nat) (P : nat → Prop) (h₁ : n) (h₂ : P 1) : P n := by
+theorem psub {P : nat → Prop} (h₁ : P 1) (n : nat) (h₂ : n) : P n := by
   match n with
-  | 0 => cases h₁
-  | 1 => exact h₂
-  | nat.succ (nat.succ _) => cases h₁
+  | 0 => cases h₂
+  | 1 => exact h₁
+  | nat.succ (nat.succ _) => cases h₂
 
-theorem ind (n : nat) (P : nat → Prop) (h₁ : P 0)
-(h₂ : (n : nat) → P n → P (succ n)) : P n := by
+theorem ind {P : nat → Prop} (h₁ : P 0)
+(h₂ : (n : nat) → P n → P (succ n)) (n : nat) : P n := by
   induction n with
   | zero => exact h₁
   | succ n ih => exact h₂ n ih
@@ -83,31 +83,33 @@ rec not (λ n f k => ite k (f (pred k)) 0) a b
 
 theorem elim' {P : Prop} {n : nat} (h : succ (succ n)) : P := by
   apply elim
-  apply psub _ (λ n => not (pred n)) h triv
+  apply @psub (λ n => not (pred n)) triv _ h
 
-theorem cs (n : nat) (P : nat → Prop) (h₁ : P 0)
-(h₂ : (n : nat) → P (succ n)) : P n := by
+theorem cs {P : nat → Prop} (h₁ : P 0)
+(h₂ : (n : nat) → P (succ n)) (n : nat) : P n := by
   induction n using ind with
   | h₁ => exact h₁
   | h₂ => apply h₂
 
-theorem psub' {n : nat} (P : nat → Prop) (h₁ : n) (h₂ : P n) : P 1 := by
+theorem psub' {P : nat → Prop} {n : nat} (h₁ : n) (h₂ : P n) : P 1 := by
   induction n using cs with
   | h₁ => apply elim h₁
   | h₂ n => induction n using cs with
     | h₁ => apply h₂
     | h₂ => apply elim' h₁
 
-theorem prop_cs {n : nat} (P : nat → Prop)
-(h₁ : P true) (h₂ : P false) (h₃ : prop n) : P n := by
+theorem prop_cs {P : nat → Prop}
+(h₁ : P true) (h₂ : P false) (n : nat) (hp : prop n) : P n := by
   induction n using cs with
   | h₁ => apply h₂
   | h₂ n => induction n using cs with
     | h₁ => apply h₁
-    | h₂ n => apply elim h₃
+    | h₂ n => apply elim hp
 
-theorem imp_intro {P Q : nat}, prop P → prop Q → (P → Q) → imp P Q :=
-@λ P Q hp hq => prop_cs (λ x => (x → Q) → imp x Q) (λ h => h triv) (λ h => triv) hp
+theorem imp_intro {P Q : nat} (hp : prop P) (hq : prop Q) (h : P → Q) : imp P Q := by
+  induction P using prop_cs with
+  | h₁ => apply h triv
+  | h₂ => apply triv
 
 theorem imp_elim {P Q : nat}, prop P → prop Q → imp P Q → P → Q :=
 @λ P Q hp hq h₁ h₂ => psub' (λ x => imp x Q) h₂ h₁
