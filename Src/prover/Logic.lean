@@ -1,4 +1,5 @@
-namespace test
+namespace prover
+noncomputable section
 
 def id.{u} {α : Sort u} (x : α) : α := x
 
@@ -340,7 +341,3 @@ iff_intro
 (λ h => exiu_elim h # λ x h₁ h₂ => exi_intro x # and_intro h₁ h₂)
 (λ h => exi_elim h # λ x h₁ => exiu_intro (exi_intro x # and_left h₁)
   (λ y z h₃ h₄ => and_elim h₁ # λ h₅ h₆ => eq_trans x (h₆ y h₃) # eq_symm # h₆ z h₄))
-
------
-
-end test

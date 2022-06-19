@@ -1,8 +1,7 @@
-import Src.Prover.Logic
+import Src.Prover.Choice
 
-namespace test
-
--- Set
+namespace prover
+noncomputable section
 
 constant Set : Type
 constant mem : Set → Set → Prop
@@ -41,22 +40,16 @@ axiom ax_rep (P : Set → Set → Prop) {a} : (∀ b, b ∈ a → ∃! c, P b c)
 axiom ax_inf : ∃ a b, empty b ∧ b ∈ a ∧ ∀ c, c ∈ a → ∀ d, is_set_succ c d → d ∈ a
 axiom ax_pow : ∀ a, ∃ b, ∀ c, c ⊆ a → c ∈ b
 
--- Choice
-
-axiom some {α : Type} {P : α → Prop} : (∃ (x : α), P x) → α
-axiom some_spec {α : Type} {P : α → Prop} (h : ∃ (x : α), P x) : P (some h)
-
 -- Theorems
 
-theorem not_empty a : ¬empty a ↔ nonempty a :=
+theorem not_empty {a} : ¬empty a ↔ nonempty a :=
 iff_refl
 
-theorem not_nonempty a : ¬nonempty a ↔ empty a :=
+theorem not_nonempty {a} : ¬nonempty a ↔ empty a :=
 iff_intro not_not_elim not_not_intro
 
-theorem subset_refl a : a ⊆ a :=
+theorem subset_refl {a} : a ⊆ a :=
 λ _ => id
 
------
-
-end test
+theorem subset_trans {a b c} (h₁ : a ⊆ b) (h₂ : b ⊆ c) : a ⊆ c :=
+λ d h₃ => h₂ d # h₁ d h₃
