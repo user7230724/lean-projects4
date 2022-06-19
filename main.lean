@@ -1,228 +1,198 @@
 namespace test
 
-inductive nat : Type
-  | zero : nat
-  | succ : nat → nat
-open nat
+def id.{u} {α : Sort u} (x : α) : α := x
 
-def rec {t : Type} (z : t) (f : nat → t → t) : nat → t
-  | nat.zero => z
-  | (nat.succ n) => f n (rec z f n)
-
-def Nat_of_nat : Nat → nat
-  | Nat.zero => nat.zero
-  | (Nat.succ n) => nat.succ (Nat_of_nat n)
-
-instance {n : Nat} : OfNat nat n where
-  ofNat := Nat_of_nat n
+infixr:1 (priority := high) " # " => id
 
 -----
 
-def Pf : nat → Prop
-| 1 => True
-| _ => False
+def true : Prop :=
+∀ (P : Prop), P → P
 
-instance : CoeSort nat Prop where
-  coe := Pf
+def false : Prop :=
+∀ (P : Prop), P
 
-theorem triv : (1 : nat) := trivial
+def not (P : Prop) : Prop :=
+P → false
 
-theorem elim {P : Prop} (h : (0 : nat)) : P := by cases h
+prefix:40 (priority := high) "¬" => not
 
-theorem psub {P : nat → Prop} (h₁ : P 1) (n : nat) (h₂ : n) : P n := by
-  match n with
-  | 0 => cases h₂
-  | 1 => exact h₁
-  | nat.succ (nat.succ _) => cases h₂
+def or (P Q : Prop) : Prop :=
+¬P → Q
 
-theorem ind {P : nat → Prop} (h₁ : P 0)
-(h₂ : (n : nat) → P n → P (succ n)) (n : nat) : P n := by
-  induction n with
-  | zero => exact h₁
-  | succ n ih => exact h₂ n ih
+infixr:30 (priority := high) " ∨ " => or
 
------
+def and (P Q : Prop) : Prop :=
+¬(¬P ∨ ¬Q)
 
-def id' {t : Type} (a : t) : t := a
-def const {t s : Type} (a : t) (b : s) : t := a
+infixr:35 (priority := high) " ∧ " => and
 
-def cases {t : Type} (z : t) (f : nat → t) (n : nat) : t :=
-rec z (λ k _ => f k) n
+def iff (P Q : Prop) : Prop :=
+(P → Q) ∧ (Q → P)
 
-def pred (n : nat) : nat :=
-cases 0 id n
+infixl:20 (priority := high) " ↔ " => iff
 
-def prop (p : nat) : nat :=
-cases 1 (cases 1 (const 0)) p
+def eq {α : Type} (x y : α) : Prop :=
+∀ (P : α → Prop), P x → P y
 
-def true : nat := 1
-def false : nat := 0
+infixl:50 (priority := high) " = " => eq
 
-def ite {t : Type} (p : nat) (a b : t) : t :=
-cases b (const a) p
+def ne {α : Type} (x y : α) : Prop :=
+¬(x = y)
 
-def not (p : nat) : nat :=
-ite p false true
-
-def and (P Q : nat) : nat :=
-ite P Q false
-
-def or (P Q : nat) : nat :=
-ite P true Q
-
-def imp (P Q : nat) : nat :=
-ite P Q true
-
-def iff (P Q : nat) : nat :=
-ite P Q (not Q)
-
-def nat_eq (a b : nat) : nat :=
-rec not (λ n f k => ite k (f (pred k)) 0) a b
+infixl:50 (priority := high) " ≠ " => ne
 
 -----
 
-theorem elim' {P : Prop} {n : nat} (h : succ (succ n)) : P := by
-  apply elim
-  apply @psub (λ n => not (pred n)) triv _ h
+axiom prop_rec (F : Prop → Prop) {P : Prop} (h₁ : F true) (h₂ : F false) : F P
 
-theorem cs {P : nat → Prop} (h₁ : P 0)
-(h₂ : (n : nat) → P (succ n)) (n : nat) : P n := by
-  induction n using ind with
-  | h₁ => exact h₁
-  | h₂ => apply h₂
+-----
 
-theorem psub' {P : nat → Prop} {n : nat} (h₁ : n) (h₂ : P n) : P 1 := by
-  induction n using cs with
-  | h₁ => apply elim h₁
-  | h₂ n => induction n using cs with
-    | h₁ => apply h₂
-    | h₂ => apply elim' h₁
+theorem trivial : true :=
+λ _ => id
 
-theorem prop_cs {P : nat → Prop}
-(h₁ : P true) (h₂ : P false) (n : nat) (hp : prop n) : P n := by
-  induction n using cs with
-  | h₁ => apply h₂
-  | h₂ n => induction n using cs with
-    | h₁ => apply h₁
-    | h₂ n => apply elim hp
+theorem not_false : not false :=
+id
 
-theorem imp_intro {P Q : nat} (hp : prop P) (hq : prop Q) (h : P → Q) : imp P Q := by
-  induction P using prop_cs with
-  | h₁ => apply h triv
-  | h₂ => apply triv
+theorem not_not_intro {P : Prop} (h : P) : ¬¬P :=
+λ h₁ => h₁ h
 
-theorem imp_elim {P Q : nat}, prop P → prop Q → imp P Q → P → Q :=
-@λ P Q hp hq h₁ h₂ => psub' (λ x => imp x Q) h₂ h₁
+theorem not_not_elim {P : Prop} (h : ¬¬P) : P :=
+prop_rec (λ x => ¬¬x → x) (λ _ => trivial) (λ h₁ => h₁ not_false) h
 
-theorem eq_refl : ∀ {a : nat}, nat_eq a a :=
-ind (λ x => nat_eq x x) triv id
+theorem em {P : Prop} : P ∨ ¬P := id
 
-theorem prop_prop : ∀ {a : nat}, prop (prop a) :=
-cs (λ x => prop (prop x)) triv (cs (λ x => prop (prop (succ x))) triv triv)
+theorem false_elim {P : Prop} (h : false) : P :=
+h P
 
-theorem prop_not : ∀ {a : nat}, prop (not a) :=
-cs (λ x => prop (not x)) triv triv
+theorem mt {P Q : Prop} (h₁ : P → Q) (h₂ : ¬Q) : ¬P :=
+λ h₃ => h₂ # h₁ h₃
 
--- theorem nat_eq_type : ∀ (a b : nat), prop (nat_eq a b) :=
--- λ a => ind (λ x => ∀ b, prop (nat_eq x b)) @prop_not
--- (@λ a ih b => cs (λ x => prop (nat_eq (succ a) x)) triv (ih (succ b)))
+theorem or_intro₁ {P Q : Prop} (h : P) : P ∨ Q :=
+λ h₁ => false_elim (h₁ h)
 
-theorem not_type : ∀ {a : nat}, prop a → prop (not a) :=
-λ a _, prop_not
+theorem or_intro₂ {P Q : Prop} (h : Q) : P ∨ Q :=
+λ _ => h
 
-theorem imp_type : ∀ {P Q : nat}, prop P → prop Q → prop (imp P Q) :=
-λ P Q _ h, @cs (λ x, prop (imp x Q)) triv (λ n, h) _
+theorem or_elim {P Q R : Prop} (h₁ : P ∨ Q) (h₂ : P → R) (h₃ : Q → R) : R :=
+not_not_elim # λ h₄ => h₄ # h₃ # h₁ # mt h₂ h₄
 
-theorem and_type : ∀ {P Q : nat}, prop P → prop Q → prop (and P Q) :=
-λ P Q _ h, @cs (λ x, prop (and x Q)) triv (λ n, h) _
+theorem or_inl {P Q : Prop} (h : P) : P ∨ Q :=
+or_intro₁ h
 
-theorem or_type : ∀ {P Q : nat}, prop P → prop Q → prop (or P Q) :=
-λ P Q _ h, @cs (λ x, prop (or x Q)) h (λ n, triv) _
+theorem or_inr {P Q : Prop} (h : Q) : P ∨ Q :=
+or_intro₂ h
 
-theorem iff_type : ∀ {P Q : nat}, prop P → prop Q → prop (iff P Q) :=
-λ P Q h₁ h₂, id prop_cs (λ x, prop (iff x Q)) h₂ (not_type h₂) h₁
+theorem and_intro {P Q : Prop} (h₁ : P) (h₂ : Q) : P ∧ Q :=
+λ h₃ => or_elim h₃ (λ h₄ => h₄ h₁) (λ h₄ => h₄ h₂)
 
-theorem and_intro : ∀ {P Q : nat}, P → Q → and P Q :=
-λ P Q h₁ h₂, id psub (λ x, and x Q) h₁ (id psub (λ x, and 1 x) h₂ triv)
+theorem and_elim₁ {P Q : Prop} (h : P ∧ Q) : P :=
+not_not_elim # λ h₁ => h # or_intro₁ h₁
 
-theorem and_elim₁ : ∀ {P Q : nat}, prop P → prop Q → and P Q → P :=
-λ P Q h₁ h₂, id prop_cs (λ x, and x Q → x) (λ _, triv) (λ h, elim h) h₁
+theorem and_elim₂ {P Q : Prop} (h : P ∧ Q) : Q :=
+not_not_elim # λ h₁ => h # or_intro₂ h₁
 
-theorem and_elim₂ : ∀ {P Q : nat}, prop P → prop Q → and P Q → Q :=
-λ P Q h₁ h₂, id prop_cs (λ x, and x Q → Q) (λ h, h) (λ h, elim h) h₁
+theorem and_left {P Q : Prop} (h : P ∧ Q) : P :=
+and_elim₁ h
 
-theorem or_intro₁ : ∀ {P Q : nat}, P → prop Q → or P Q :=
-λ P Q h₁ h₂, id psub (λ x, or x Q) h₁ triv
+theorem and_right {P Q : Prop} (h : P ∧ Q) : Q :=
+and_elim₂ h
 
-theorem or_intro₂ : ∀ {P Q : nat}, prop P → Q → or P Q :=
-λ P Q h₁ h₂, id prop_cs (λ x, or x Q) triv h₂ h₁
+theorem iff_intro {P Q : Prop} (h₁ : P → Q) (h₂ : Q → P) : P ↔ Q :=
+and_intro h₁ h₂
 
-theorem or_elim : ∀ {F : Prop} {P Q : nat}, prop P → prop Q → or P Q → (P → F) → (Q → F) → F :=
-λ F P Q hp hq, prop_cs (λ x, or x Q → (x → F) → (Q → F) → F)
-(λ h₁ h₂ h₃, h₂ triv) (λ h₁ h₂ h₃, h₃ h₁) hp
+theorem iff_elim₁ {P Q : Prop} (h : P ↔ Q) : P → Q :=
+and_elim₁ h
 
-theorem iff_intro : ∀ {P Q : nat}, prop P → prop Q → imp P Q → imp Q P → iff P Q :=
-λ P Q hp hq, prop_cs (λ x, imp x Q → imp Q x → iff x Q) (λ h₁ h₂, h₁)
-(λ h₁, prop_cs (λ x, imp x false → iff false x) (λ h₂, elim h₂) (λ _, triv) hq) hp
+theorem iff_elim₂ {P Q : Prop} (h : P ↔ Q) : Q → P :=
+and_elim₂ h
 
-theorem iff_elim₁ : ∀ {P Q : nat}, prop P → prop Q → iff P Q → imp P Q :=
-λ P Q hp hq, prop_cs (λ x, iff x Q → imp x Q) (λ h, h) (λ _, triv) hp
+theorem mp {P Q : Prop} (h : P ↔ Q) : P → Q :=
+iff_elim₁ h
 
-theorem iff_elim₂ : ∀ {P Q : nat}, prop P → prop Q → iff P Q → imp Q P :=
-λ P Q hp hq, prop_cs (λ x, iff x Q → imp Q x)
-(λ _, id prop_cs (λ x, imp x true) triv triv hq)
-(id prop_cs (λ x, iff false x → imp x false) (λ h, h) (λ h, triv) hq) hp
+theorem mpr {P Q : Prop} (h : P ↔ Q) : Q → P :=
+iff_elim₂ h
 
-theorem not_not : ∀ {P : nat}, prop P → iff (not (not P)) P :=
-prop_cs (λ x, iff (not (not x)) x) triv triv
+theorem true_ne_false : true ≠ false :=
+λ h => h id trivial
 
-theorem iff_sub : ∀ (F : nat → Prop) ⦃P Q : nat⦄, prop P → prop Q → iff P Q → F P → F Q :=
-λ F P Q hp hq, prop_cs (λ x, iff x Q → F x → F Q)
-(λ h₁ h₂, psub F (@imp_elim true Q triv hq (@iff_elim₁ true Q triv hq h₁) triv) h₂)
-(id prop_cs (λ x, iff false x → F false → F x) (λ h, elim h) (λ _ h, h) hq) hp
+theorem not_not {P : Prop} : ¬¬P ↔ P :=
+iff_intro not_not_elim not_not_intro
 
-theorem imp_refl : ∀ {P : nat}, prop P → imp P P :=
-λ P hp, imp_intro hp hp (λ h, h)
+theorem iff_rec (F : Prop → Prop) {P Q : Prop} (h₁ : P ↔ Q) (h₂ : F P) : F Q :=
+prop_rec (λ x => (x ↔ Q) → F x → F Q)
+(@prop_rec (λ x => (true ↔ x) → F true → F x) Q (λ _ => id)
+  (λ h₃ => false_elim # mp h₃ trivial))
+(@prop_rec (λ x => (false ↔ x) → F false → F x) Q
+  (λ h₃ => false_elim # mpr h₃ trivial) (λ _ => id))
+h₁ h₂
 
-theorem iff_refl : ∀ {P : nat}, prop P → iff P P :=
-λ P hp, iff_intro hp hp (imp_refl hp) (imp_refl hp)
+theorem eq_refl {α : Type} {x : α} : x = x :=
+λ _ => id
 
-theorem and_symm : ∀ {P Q : nat}, prop P → prop Q → and P Q → and Q P :=
-λ P Q hp hq h, and_intro (and_elim₂ hp hq h) (and_elim₁ hp hq h)
+theorem rfl {α : Type} {x : α} : x = x :=
+eq_refl
 
-theorem or_symm : ∀ {P Q : nat}, prop P → prop Q → or P Q → or Q P :=
-λ P Q hp hq h, or_elim hp hq h (λ h₁, or_intro₂ hq h₁) (λ h₁, or_intro₁ h₁ hp)
+theorem eq_symm {α : Type} {x y : α} (h : x = y) : y = x :=
+not_not_elim # λ h₁ => mt (h (λ z => z = x)) h₁ rfl
 
-theorem iff_symm : ∀ {P Q : nat}, prop P → prop Q → iff P Q → iff Q P :=
-λ P Q hp hq h, iff_intro hq hp (iff_elim₂ hp hq h) (iff_elim₁ hp hq h)
+theorem eq_iff {α : Type} {x y : α} : x = y ↔ (∀ (P : α → Prop), P x ↔ P y) :=
+iff_intro (λ h P => iff_intro (h P) (eq_symm h P)) (λ h => mp (h (λ z => x = z)) rfl)
 
-theorem imp_tran : ∀ {P Q R : nat}, prop P → prop Q → prop R → imp P Q → imp Q R → imp P R :=
-λ P Q R hp hq hr h₁ h₂, imp_intro hp hr
-(λ h₃, imp_elim hq hr h₂ (imp_elim hp hq h₁ h₃))
+theorem eq_rec {α : Type} (P : α → Prop) {x y : α} (h₁ : x = y) (h₂ : P x) : P y :=
+h₁ P h₂
 
-theorem not_zero_eq_succ {n : nat} : not (nat_eq 0 (succ n)) := triv
+theorem imp_refl {P : Prop} : P → P :=
+id
 
-theorem not_succ_eq_zero {n : nat} : not (nat_eq (succ n) 0) :=
-@ind (λ x, not (nat_eq (succ x) 0)) triv (λ n ih, ih) n
+theorem iff_refl {P : Prop} : P ↔ P :=
+iff_intro id id
 
-theorem eq_of_succ_eq_succ {a b : nat} : nat_eq (succ a) (succ b) → nat_eq a b := id
+theorem or_self {P : Prop} : P ∨ P ↔ P :=
+iff_intro (λ h => or_elim h id id) (λ h => or_inl h)
 
-theorem eq_sub {a b : nat} (P : nat → Prop) (h₁ : nat_eq a b) (h₂ : P a) : P b :=
-begin
-  induction a using test.ind with a ih generalizing P b,
-  { induction b using test.cs with b,
-    { exact h₂ },
-    { exact elim h₁ }},
-  { specialize @ih (λ x, P (succ x)) (pred b),
-    induction b using test.cs with b,
-    { exact elim h₁ },
-    { exact ih h₁ h₂ }},
-end
+theorem and_self {P : Prop} : P ∧ P ↔ P :=
+iff_intro and_left (λ h => and_intro h h)
 
-theorem eq_symm {a b : nat} (h : nat_eq a b) : nat_eq b a :=
-by apply eq_sub (λ x, nat_eq x a) h eq_refl
+theorem not_or {P Q : Prop} : ¬(P ∨ Q) ↔ ¬P ∧ ¬Q :=
+iff_intro
+(λ h => and_intro (λ h₁ => h # or_inl h₁) (λ h₁ => h # or_inr h₁))
+(λ h h₁ => or_elim h₁ (λ h₂ => and_left h h₂) (λ h₂ => and_right h h₂))
 
-theorem eq_tran {a b c : nat} (h₁ : nat_eq a b) (h₂ : nat_eq b c) : nat_eq a c :=
-by apply eq_sub _ (eq_symm h₁) h₂
+theorem not_and {P Q : Prop} : ¬(P ∧ Q) ↔ ¬P ∨ ¬Q :=
+iff_intro
+(λ h => not_not_elim # λ h₁ => (λ h₂ => h # and_intro
+  (not_not_elim # and_left h₂) (not_not_elim # and_right h₂)) (mp not_or h₁))
+(λ h h₁ => or_elim h (λ h₂ => h₂ # and_left h₁) (λ h₂ => h₂ # and_right h₁))
+
+theorem not_iff_not_self {P : Prop} : ¬(P ↔ ¬P) :=
+λ h => or_elim (@em P) (λ h₁ => mp h h₁ h₁) (λ h₁ => h₁ # mpr h h₁)
+
+theorem or_symm {P Q : Prop} (h : P ∨ Q) : Q ∨ P :=
+or_elim h or_inr or_inl
+
+theorem and_symm {P Q : Prop} (h : P ∧ Q) : Q ∧ P :=
+and_intro (and_right h) (and_left h)
+
+theorem iff_symm {P Q : Prop} (h : P ↔ Q) : Q ↔ P :=
+iff_intro (mpr h) (mp h)
+
+theorem not_iff {P Q : Prop} : ¬(P ↔ Q) ↔ (¬P ↔ Q) :=
+iff_intro
+(λ h => iff_intro (λ h₁ => not_not_elim # λ h₂ => h # iff_intro
+  (λ h₃ => false_elim # h₁ h₃) (λ h₃ => false_elim # h₂ h₃))
+  (λ h₁ h₂ => h # iff_intro (λ _ => h₁) (λ _ => h₂)))
+(λ h h₁ => @not_iff_not_self Q # iff_symm # @iff_rec (λ x => ¬x ↔ Q) P Q h₁ h)
+
+theorem iff_true_intro {P : Prop} (h : P) : P ↔ true :=
+iff_intro (λ _ => trivial) (λ _ => h)
+
+-- theorem iff_true_elim {P : Prop} (h : P ↔ true) : P :=
+-- _
+
+-- theorem eq_true_or_false {P : Prop} : P = true ∨ P = false :=
+-- _
+
+-----
 
 end test
