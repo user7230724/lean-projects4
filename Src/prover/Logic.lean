@@ -4,7 +4,14 @@ def id.{u} {α : Sort u} (x : α) : α := x
 
 infixr:1 (priority := high) " # " => id
 
------
+-- Set
+
+constant Set : Type
+constant mem : Set → Set → Prop
+
+infix:50 (priority := high) " ∈ " => mem
+
+-- Definitions
 
 def true : Prop :=
 ∀ (P : Prop), P → P
@@ -42,11 +49,14 @@ def ne {α : Type} (x y : α) : Prop :=
 
 infixl:50 (priority := high) " ≠ " => ne
 
------
+-- Axioms
 
 axiom prop_rec (F : Prop → Prop) {P : Prop} (h₁ : F true) (h₂ : F false) : F P
+axiom set_ext {a b : Set} (h : ∀ (c : Set), c ∈ a ↔ c ∈ b) : a = b
 
------
+-- Theorems
+
+#exit
 
 theorem trivial : true :=
 λ _ => id
