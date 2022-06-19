@@ -121,9 +121,9 @@ iff_intro not_not_elim not_not_intro
 
 theorem iff_rec (F : Prop → Prop) {P Q : Prop} (h₁ : P ↔ Q) (h₂ : F P) : F Q :=
 prop_rec (λ x => (x ↔ Q) → F x → F Q)
-(@prop_rec (λ x => (true ↔ x) → F true → F x) Q (λ _ => id)
+(prop_rec (λ x => (true ↔ x) → F true → F x) (λ _ => id)
   (λ h₃ => false_elim # mp h₃ trivial))
-(@prop_rec (λ x => (false ↔ x) → F false → F x) Q
+(prop_rec (λ x => (false ↔ x) → F false → F x)
   (λ h₃ => false_elim # mpr h₃ trivial) (λ _ => id))
 h₁ h₂
 
@@ -166,7 +166,7 @@ iff_intro
 (λ h h₁ => or_elim h (λ h₂ => h₂ # and_left h₁) (λ h₂ => h₂ # and_right h₁))
 
 theorem not_iff_not_self {P : Prop} : ¬(P ↔ ¬P) :=
-λ h => or_elim (@em P) (λ h₁ => mp h h₁ h₁) (λ h₁ => h₁ # mpr h h₁)
+λ h => or_elim em (λ h₁ => mp h h₁ h₁) (λ h₁ => h₁ # mpr h h₁)
 
 theorem or_symm {P Q : Prop} (h : P ∨ Q) : Q ∨ P :=
 or_elim h or_inr or_inl
@@ -182,16 +182,46 @@ iff_intro
 (λ h => iff_intro (λ h₁ => not_not_elim # λ h₂ => h # iff_intro
   (λ h₃ => false_elim # h₁ h₃) (λ h₃ => false_elim # h₂ h₃))
   (λ h₁ h₂ => h # iff_intro (λ _ => h₁) (λ _ => h₂)))
-(λ h h₁ => @not_iff_not_self Q # iff_symm # @iff_rec (λ x => ¬x ↔ Q) P Q h₁ h)
+(λ h h₁ => not_iff_not_self # iff_symm # iff_rec (λ x => ¬x ↔ Q) h₁ h)
 
 theorem iff_true_intro {P : Prop} (h : P) : P ↔ true :=
 iff_intro (λ _ => trivial) (λ _ => h)
 
--- theorem iff_true_elim {P : Prop} (h : P ↔ true) : P :=
--- _
+theorem iff_true_elim {P : Prop} (h : P ↔ true) : P :=
+mpr h trivial
 
--- theorem eq_true_or_false {P : Prop} : P = true ∨ P = false :=
--- _
+theorem iff_true {P : Prop} : (P ↔ true) ↔ P :=
+iff_intro iff_true_elim iff_true_intro
+
+theorem iff_false_intro {P : Prop} (h : ¬P) : P ↔ false :=
+iff_intro h false_elim
+
+theorem iff_false_elim {P : Prop} (h : P ↔ false) : ¬P :=
+mp h
+
+theorem iff_false {P : Prop} : (P ↔ false) ↔ ¬P :=
+iff_intro iff_false_elim iff_false_intro
+
+theorem prop_eq {P Q : Prop} : P = Q ↔ (P ↔ Q) :=
+iff_intro
+(λ h => eq_rec (λ x => P ↔ x) h iff_refl)
+(λ h => iff_rec (λ x => P = x) h rfl)
+
+theorem iff_rec' (F : Prop → Prop) {P Q : Prop} (h₁ : P ↔ Q) (h₂ : F Q) : F P :=
+iff_rec F (iff_symm h₁) h₂
+
+theorem eq_rec' {α : Type} (P : α → Prop) {x y : α} (h₁ : x = y) (h₂ : P y) : P x :=
+eq_rec P (eq_symm h₁) h₂
+
+theorem eq_true {P : Prop} : P = true ↔ P :=
+iff_rec' (λ x => x ↔ P) prop_eq iff_true
+
+theorem eq_false {P : Prop} : P = false ↔ ¬P :=
+iff_rec' (λ x => x ↔ ¬P) prop_eq iff_false
+
+theorem eq_true_or_false {P : Prop} : P = true ∨ P = false :=
+iff_rec' (λ x => x ∨ P = false) eq_true #
+iff_rec' (λ x => P ∨ x) eq_false em
 
 -----
 
