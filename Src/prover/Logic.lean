@@ -42,9 +42,27 @@ def ne {α : Type} (x y : α) : Prop :=
 
 infixl:50 (priority := high) " ≠ " => ne
 
+def exi {α : Type} (P : α → Prop) : Prop :=
+¬(∀ (x : α), ¬P x)
+
+section
+open Lean
+macro (priority := high) "∃ " xs:explicitBinders ", " b:term : term =>
+expandExplicitBinders ``exi xs b
+end
+
+def exiu {α : Type} (P : α → Prop) : Prop :=
+(∃ (x : α), P x) ∧ (∀ (x y : α), P x → P y → x = y)
+
+section
+open Lean
+macro (priority := high) "∃! " xs:explicitBinders ", " b:term : term =>
+expandExplicitBinders ``exiu xs b
+end
+
 -- Axioms
 
-axiom prop_rec (F : Prop → Prop) {P : Prop} (h₁ : F true) (h₂ : F false) : F P
+axiom prop_rec (F : Prop → Prop) {P : Prop} : F true → F false → F P
 
 -- Theorems
 
@@ -59,6 +77,9 @@ theorem not_not_intro {P : Prop} (h : P) : ¬¬P :=
 
 theorem not_not_elim {P : Prop} (h : ¬¬P) : P :=
 prop_rec (λ x => ¬¬x → x) (λ _ => trivial) (λ h₁ => h₁ not_false) h
+
+theorem contra {P : Prop} (h : ¬¬P) : P :=
+not_not_elim h
 
 theorem em {P : Prop} : P ∨ ¬P := id
 
@@ -222,6 +243,103 @@ iff_rec' (λ x => x ↔ ¬P) prop_eq iff_false
 theorem eq_true_or_false {P : Prop} : P = true ∨ P = false :=
 iff_rec' (λ x => x ∨ P = false) eq_true #
 iff_rec' (λ x => P ∨ x) eq_false em
+
+theorem exi_intro {α : Type} {P : α → Prop} (x : α) (h : P x) : ∃ (x : α), P x :=
+λ h₁ => h₁ x h
+
+theorem exi_elim {α : Type} {P : α → Prop} {Q : Prop}
+  (h₁ : ∃ (x : α), P x) (h₂ : ∀ (x : α), P x → Q) : Q :=
+not_not_elim # λ h₃ => h₁ # λ x => mt (h₂ x) h₃
+
+theorem not_forall {α : Type} {P : α → Prop} : ¬(∀ (x : α), P x) ↔ ∃ (x : α), ¬P x :=
+iff_intro
+(λ h h₁ => h # λ x => not_not_elim # h₁ x)
+(λ h h₁ => h # λ x => not_not_intro # h₁ x)
+
+theorem not_exi {α : Type} {P : α → Prop} : ¬(∃ (x : α), P x) ↔ ∀ (x : α), ¬P x :=
+iff_intro
+(λ h x h₁ => h # exi_intro x h₁)
+(λ h h₁ => exi_elim h₁ h)
+
+theorem exiu_intro {α : Type} {P : α → Prop} (h₁ : ∃ (x : α), P x)
+  (h₂ : ∀ (x y : α), P x → P y → x = y) : ∃! (x : α), P x :=
+and_intro h₁ h₂
+
+theorem and_elim {P Q R : Prop} (h₁ : P ∧ Q) (h₂ : P → Q → R) : R :=
+h₂ (and_left h₁) (and_right h₁)
+
+theorem iff_elim {P Q R : Prop} (h₁ : P ↔ Q) (h₂ : (P → Q) → (Q → P) → R) : R :=
+h₂ (mp h₁) (mpr h₁)
+
+theorem exiu_elim {α : Type} {P : α → Prop} {Q : Prop} (h₁ : ∃! (x : α), P x)
+  (h₂ : ∀ (x : α), P x → (∀ (y : α), P y → y = x) → Q) : Q :=
+and_elim h₁ # λ h₃ h₄ => exi_elim h₃ # λ x h₅ => h₂ x h₅ # λ y h₆ => h₄ y x h₆ h₅
+
+theorem imp_trans {P Q R : Prop} (h₁ : P → Q) (h₂ : Q → R) : P → R :=
+λ h => h₂ # h₁ h
+
+theorem or_assoc {P Q R : Prop} : (P ∨ Q) ∨ R ↔ P ∨ (Q ∨ R) :=
+iff_intro
+(λ h => or_elim h
+  (λ h₁ => or_elim h₁ or_inl (λ h₂ => or_inr # or_inl h₂))
+  (λ h₁ => or_inr # or_inr h₁))
+(λ h => or_elim h
+  (λ h₁ => or_inl # or_inl h₁)
+  (λ h₁ => or_elim h₁ (λ h₂ => or_inl # or_inr h₂) or_inr))
+
+theorem and_assoc {P Q R : Prop} : (P ∧ Q) ∧ R ↔ P ∧ (Q ∧ R) :=
+iff_intro
+(λ h => and_elim h # λ h₁ h₂ =>
+  and_intro (and_left h₁) (and_intro (and_right h₁) h₂))
+(λ h => and_elim h # λ h₁ h₂ =>
+  and_intro (and_intro h₁ (and_left h₂)) (and_right h₂))
+
+theorem or_symm' {P Q : Prop} : P ∨ Q ↔ Q ∨ P :=
+iff_intro or_symm or_symm
+
+theorem and_symm' {P Q : Prop} : P ∧ Q ↔ Q ∧ P :=
+iff_intro and_symm and_symm
+
+theorem iff_symm' {P Q : Prop} : (P ↔ Q) ↔ (Q ↔ P) :=
+iff_intro iff_symm iff_symm
+
+theorem eq_symm' {α : Type} {x y : α} : x = y ↔ y = x :=
+iff_intro eq_symm eq_symm
+
+theorem iff_iff_cancel {P Q : Prop} (h : (P ↔ Q) ↔ Q) : P :=
+contra # λ h₁ => iff_rec (λ x => ¬((x ↔ Q) ↔ Q))
+(iff_symm # iff_false_intro h₁)
+(λ h₂ => iff_rec (λ x => ¬(x ↔ Q))
+  (iff_intro (λ h₃ => iff_symm # iff_false_intro h₃) mpr)
+  (λ h₄ => not_iff_not_self # iff_symm h₄) h₂) h
+
+theorem iff_assoc_aux {P Q R : Prop} (h : (P ↔ Q) ↔ R) : P ↔ (Q ↔ R) :=
+iff_elim h # λ h₁ h₂ => iff_intro
+(λ h₃ => iff_intro
+  (λ h₄ => h₁ # iff_intro (λ _ => h₄) (λ _ => h₃))
+  (λ h₄ => mp (h₂ h₄) h₃))
+(λ h₃ => iff_iff_cancel # iff_rec (λ x => (P ↔ x) ↔ R) h₃ h)
+
+theorem iff_assoc {P Q R : Prop} : ((P ↔ Q) ↔ R) ↔ (P ↔ (Q ↔ R)) :=
+iff_intro iff_assoc_aux
+(λ h => iff_symm # iff_rec' (λ x => R ↔ x) iff_symm' #
+  iff_assoc_aux # iff_rec' (λ x => x ↔ P) iff_symm' # iff_symm h)
+
+theorem and_trans {P Q R  : Prop} (h₁ : P ∧ Q) (h₂ : Q ∧ R) : P ∧ R :=
+and_intro (and_left h₁) (and_right h₂)
+
+theorem iff_trans {P Q R  : Prop} (h₁ : P ↔ Q) (h₂ : Q ↔ R) : P ↔ R :=
+iff_intro (λ h₃ => mp h₂ # mp h₁ h₃) (λ h₃ => mpr h₁ # mpr h₂ h₃)
+
+theorem eq_trans {α : Type} (y : α) {x z : α} (h₁ : x = y) (h₂ : y = z) : x = z :=
+eq_rec' (λ x => x = z) h₁ h₂
+
+theorem exiu_iff {α : Type} {P : α → Prop} :
+  (∃! (x : α), P x) ↔ ∃ (x : α), P x ∧ ∀ (y : α), P y → y = x :=
+iff_intro
+(λ h => exiu_elim h # λ x h₁ h₂ => exi_intro x # and_intro h₁ h₂)
+(λ h => exi_elim h # λ x h₁ => exiu_intro (exi_intro x # and_left h₁)
+  (λ y z h₃ h₄ => and_elim h₁ # λ h₅ h₆ => eq_trans x (h₆ y h₃) # eq_symm # h₆ z h₄))
 
 -----
 
