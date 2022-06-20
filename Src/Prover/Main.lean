@@ -158,14 +158,11 @@ or_elim (@em P)
 
 -- Natural numbers
 
-#exit
-
-def succ (a : Set) : Set :=
-_
+-- #exit
 
 def zero : Set := ∅
 
-instance : OfNat Set n := ⟨Nat.rec zero _ n⟩
+instance : OfNat Set (nat_lit 0) := ⟨zero⟩
 
 theorem empty_zero : empty 0 :=
 empty_emp
@@ -176,8 +173,27 @@ not_mem_emp
 def one : Set :=
 pwset 0
 
+instance : OfNat Set (nat_lit 1) := ⟨one⟩
+
 theorem zero_mem_one : 0 ∈ 1 :=
 mem_pwset_self
+
+theorem nempty_one : nempty 1 :=
+nempty_intro 0 zero_mem_one
+
+theorem subset_emp {a} : a ⊆ ∅ ↔ a = ∅ :=
+iff_intro
+(λ h => mp empty_iff_eq_emp # contra # λ h₁ => nempty_elim (mp not_empty h₁) #
+  λ b h₂ => not_mem_emp # h b h₂)
+(λ h => eq_rec' (λ x => x ⊆ ∅) h subset_refl)
+
+theorem mem_one {a} : a ∈ 1 ↔ a = 0 :=
+iff_intro
+(λ h => mp subset_emp # mp mem_pwset h)
+(λ h => eq_rec' (λ x => x ∈ 1) h zero_mem_one)
+
+def two : Set :=
+pwset 1
 
 #exit
 
