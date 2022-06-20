@@ -36,10 +36,10 @@ theorem exi_nonempty : ∃ a, nonempty a :=
 exi_elim ax_inf # λ a h₁ => exi_elim h₁ # λ b h₂ => exi_intro a #
 nonempty_intro b # and_left # and_right h₂
 
-def spec (a : Set) (P : Set → Prop) : Set :=
+def filter (a : Set) (P : Set → Prop) : Set :=
 some # ax_spec a P
 
-theorem mem_spec {a b} {P : Set → Prop} : b ∈ spec a P ↔ b ∈ a ∧ P b :=
+theorem mem_filter {a b} {P : Set → Prop} : b ∈ filter a P ↔ b ∈ a ∧ P b :=
 some_spec (ax_spec a P) b
 
 def fun_to_pred {α β : Type} (f : α → β) (x : α) (y : β) : Prop :=
@@ -64,13 +64,13 @@ exi_elim (some_spec (ax_rep a (fun_to_pred f) (λ b h => exiu_fun_to_pred)) c h�
 eq_rec' (λ x => x ∈ image_aux a f) (eq_trans (eq_symm h₃) h₆) h₅
 
 def image (a : Set) (f : Set → Set) : Set :=
-spec (image_aux a f) # λ b => ∃ c, c ∈ a ∧ f c = b
+filter (image_aux a f) # λ b => ∃ c, c ∈ a ∧ f c = b
 
 theorem mem_image {a b : Set} {f : Set → Set} :
   b ∈ image a f ↔ ∃ c, c ∈ a ∧ f c = b :=
 iff_intro
-(λ h => and_right # mp mem_spec h)
-(λ h => mpr mem_spec # and_intro (mem_image_aux_of h) h)
+(λ h => and_right # mp mem_filter h)
+(λ h => mpr mem_filter # and_intro (mem_image_aux_of h) h)
 
 def singleton (a : Set) : Set :=
 image (some exi_nonempty) # λ b => a
