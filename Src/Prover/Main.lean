@@ -39,7 +39,7 @@ nempty_intro b # and_left # and_right h₂
 def filter (a : Set) (P : Set → Prop) : Set :=
 some # ax_spec a P
 
-theorem mem_filter {a b} {P : Set → Prop} : b ∈ filter a P ↔ b ∈ a ∧ P b :=
+theorem mem_filter {P : Set → Prop} {a b} : b ∈ filter a P ↔ b ∈ a ∧ P b :=
 some_spec (ax_spec a P) b
 
 def pred_of_fun {α β : Type} (f : α → β) (x : α) (y : β) : Prop :=
@@ -56,7 +56,7 @@ exiu_intro (f x) rfl # λ y h => eq_symm h
 def image_aux (a : Set) (f : Set → Set) : Set :=
 some # ax_rep a (pred_of_fun f) # λ b h => exiu_pred_of_fun
 
-theorem mem_image_aux_of {a b : Set} {f : Set → Set}
+theorem mem_image_aux_of {f : Set → Set} {a b}
   (h : ∃ c, c ∈ a ∧ f c = b) : b ∈ image_aux a f :=
 exi_elim h # λ c h₁ => and_elim h₁ # λ h₂ h₃ =>
 exi_elim (some_spec (ax_rep a (pred_of_fun f) (λ b h => exiu_pred_of_fun)) c h₂) #
@@ -66,7 +66,7 @@ eq_rec' (λ x => x ∈ image_aux a f) (eq_trans (eq_symm h₃) h₆) h₅
 def image (a : Set) (f : Set → Set) : Set :=
 filter (image_aux a f) # λ b => ∃ c, c ∈ a ∧ f c = b
 
-theorem mem_image {a b : Set} {f : Set → Set} :
+theorem mem_image {f : Set → Set} {a b} :
   b ∈ image a f ↔ ∃ c, c ∈ a ∧ f c = b :=
 iff_intro
 (λ h => and_right # mp mem_filter h)
@@ -92,6 +92,47 @@ exi_elim (ax_reg nempty_singleton) # λ b h => and_elim h # λ h₁ h₂ h₃ =>
 exi_intro a # and_intro (eq_rec' (λ x => a ∈ x) (mp mem_singleton h₁) h₃)
 mem_singleton_self
 
+theorem nempty_image {a} {f : Set → Set} : nempty (image a f) ↔ nempty a :=
+iff_intro
+(λ h => nempty_elim h # λ b h₁ => exi_elim (mp mem_image h₁) #
+  λ c h₂ => nempty_intro c # and_left h₂)
+(λ h => nempty_elim h # λ b h₁ => nempty_intro (f b) # mpr mem_image #
+  exi_intro b # and_intro h₁ rfl)
+
+theorem not_mem_emp {a} : a ∉ ∅ :=
+not_mem_of_empty empty_emp
+
+theorem empty_iff_eq_emp {a} : empty a ↔ a = ∅ :=
+iff_intro
+(λ h => ax_ext # λ b => iff_intro
+  (λ h₁ => false_elim # not_mem_of_empty h h₁) (λ h₁ => false_elim # not_mem_emp h₁))
+(λ h => eq_rec' empty h empty_emp)
+
+def some_inf : Set :=
+some ax_inf
+
+theorem emp_mem_some_inf : ∅ ∈ some_inf :=
+exi_elim (some_spec ax_inf) # λ d h =>
+eq_rec (λ x => x ∈ some_inf) (mp empty_iff_eq_emp # and_left h) #
+and_left # and_right h
+
+theorem nempty_some_inf : nempty some_inf :=
+nempty_intro ∅ emp_mem_some_inf
+
+theorem ne_singleton_self {a} : a ≠ singleton a :=
+λ h => mem_irrefl # eq_symm h (λ x => a ∈ x) mem_singleton_self
+
+def pwset (a : Set) : Set :=
+filter (some # ax_pow a) # λ b => b ⊆ a
+
+theorem mem_pwset {a b} : b ∈ pwset a ↔ b ⊆ a :=
+iff_intro
+(λ h => and_right (mp (@mem_filter (λ x => x ⊆ a) _ _) h))
+(λ h => mpr mem_filter # and_intro (some_spec (ax_pow a) b h) h)
+
+theorem mem_pwset_self {a} : a ∈ pwset a :=
+mpr mem_pwset subset_refl
+
 -- Conditional
 
 theorem exi_ite_val {α : Type} (P : Prop) (x y : α) :
@@ -115,31 +156,47 @@ or_elim (@em P)
 (λ h₃ => eq_rec' F (if_pos h₃) # h₁ h₃)
 (λ h₃ => eq_rec' F (if_neg h₃) # h₂ h₃)
 
+-- Natural numbers
+
+#exit
+
+def succ (a : Set) : Set :=
+_
+
+def zero : Set := ∅
+
+instance : OfNat Set n := ⟨Nat.rec zero _ n⟩
+
+theorem empty_zero : empty 0 :=
+empty_emp
+
+theorem not_mem_zero {a} : a ∉ 0 :=
+not_mem_emp
+
+def one : Set :=
+pwset 0
+
+theorem zero_mem_one : 0 ∈ 1 :=
+mem_pwset_self
+
+#exit
+
 -- Unordered pair
 
 def upair (a b : Set) : Set :=
-image (some ax_inf) # λ c => ite (empty c) a b
-
-theorem nempty_image {a} {f : Set → Set} : nempty (image a f) ↔ nempty a :=
-iff_intro
-(λ h => nempty_elim h # λ b h₁ => exi_elim (mp mem_image h₁) #
-  λ c h₂ => nempty_intro c # and_left h₂)
-(λ h => nempty_elim h # λ b h₁ => nempty_intro (f b) # mpr mem_image #
-  exi_intro b # and_intro h₁ rfl)
-
-theorem not_mem_emp {a} : a ∉ ∅ :=
-not_mem_of_empty empty_emp
-
-theorem empty_iff_eq_emp {a} : empty a ↔ a = ∅ :=
-iff_intro
-(λ h => ax_ext # λ b => iff_intro
-  (λ h₁ => false_elim # not_mem_of_empty h h₁) (λ h₁ => false_elim # not_mem_emp h₁))
-(λ h => eq_rec' empty h empty_emp)
+image some_inf # λ c => ite (empty c) a b
 
 theorem empty_elim (P : Set → Prop) {a} (h₁ : empty a) (h₂ : P ∅) : P a :=
 eq_rec' P (mp empty_iff_eq_emp h₁) h₂
 
 theorem nempty_upair {a b : Set} : nempty (upair a b) :=
-mpr nempty_image # nempty_intro ∅ # exi_elim (some_spec ax_inf) # λ c h =>
-eq_rec (λ x => x ∈ some ax_inf) (mp empty_iff_eq_emp # and_left h) #
-and_left # and_right h
+mpr nempty_image # nempty_some_inf
+
+theorem mem_upair {a b c} : c ∈ upair a b ↔ c = a ∨ c = b :=
+iff_intro
+(λ h => exi_elim (mp mem_image h) # λ d h₁ => split_ifs (λ x => x = c → c = a ∨ c = b)
+  (λ h₂ h₃ => or_inl # eq_symm h₃) (λ h₂ h₃ => or_inr # eq_symm h₃) # and_right h₁)
+(λ h => mpr mem_image # or_elim h
+  (λ h₁ => exi_intro ∅ # and_intro emp_mem_some_inf #
+    eq_trans (if_pos empty_emp) (eq_symm h₁))
+  (λ h₁ => _)
