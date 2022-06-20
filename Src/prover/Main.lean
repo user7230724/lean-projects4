@@ -58,9 +58,10 @@ some # ax_rep a (fun_to_pred f) # λ b h => exiu_fun_to_pred
 
 theorem mem_image_aux_of {a b : Set} {f : Set → Set}
   (h : ∃ c, c ∈ a ∧ f c = b) : b ∈ image_aux a f :=
-sorry
-
-#exit
+exi_elim h # λ c h₁ => and_elim h₁ # λ h₂ h₃ =>
+exi_elim (some_spec (ax_rep a (fun_to_pred f) (λ b h => exiu_fun_to_pred)) c h₂) #
+λ d h₄ => and_elim h₄ # λ h₅ h₆ =>
+eq_rec' (λ x => x ∈ image_aux a f) (eq_trans (eq_symm h₃) h₆) h₅
 
 def image (a : Set) (f : Set → Set) : Set :=
 spec (image_aux a f) # λ b => ∃ c, c ∈ a ∧ f c = b
@@ -69,9 +70,19 @@ theorem mem_image {a b : Set} {f : Set → Set} :
   b ∈ image a f ↔ ∃ c, c ∈ a ∧ f c = b :=
 iff_intro
 (λ h => and_right # mp mem_spec h)
-(λ h => mpr mem_spec # and_intro _ h)
+(λ h => mpr mem_spec # and_intro (mem_image_aux_of h) h)
 
-#exit
+def singleton (a : Set) : Set :=
+image (some exi_nonempty) # λ b => a
 
-theorem mem_irrefl {a} : a ∉ a :=
-_
+theorem mem_singleton {a b} : b ∈ singleton a ↔ b = a :=
+iff_intro
+(λ h => exi_elim (mp mem_image h) # λ c h₁ => eq_symm # and_right h₁)
+(λ h => mpr mem_image # exi_elim (mp nonempty_iff # some_spec exi_nonempty) #
+  λ c h₁ => exi_intro c # and_intro h₁ # eq_symm h)
+
+theorem mem_singleton_self {a} : a ∈ singleton a :=
+mpr mem_singleton rfl
+
+-- theorem mem_irrefl {a} : a ∉ a :=
+-- sorry

@@ -332,7 +332,7 @@ and_intro (and_left h₁) (and_right h₂)
 theorem iff_trans {P Q R  : Prop} (h₁ : P ↔ Q) (h₂ : Q ↔ R) : P ↔ R :=
 iff_intro (λ h₃ => mp h₂ # mp h₁ h₃) (λ h₃ => mpr h₁ # mpr h₂ h₃)
 
-theorem eq_trans {α : Type} (y : α) {x z : α} (h₁ : x = y) (h₂ : y = z) : x = z :=
+theorem eq_trans {α : Type} {y : α} {x z : α} (h₁ : x = y) (h₂ : y = z) : x = z :=
 eq_rec' (λ x => x = z) h₁ h₂
 
 theorem exiu_iff {α : Type} {P : α → Prop} :
@@ -340,7 +340,7 @@ theorem exiu_iff {α : Type} {P : α → Prop} :
 iff_intro
 (λ h => exiu_elim h # λ x h₁ h₂ => exi_intro x # and_intro h₁ h₂)
 (λ h => exi_elim h # λ x h₁ => exiu_intro' (exi_intro x # and_left h₁)
-  (λ y z h₃ h₄ => and_elim h₁ # λ h₅ h₆ => eq_trans x (h₆ y h₃) # eq_symm # h₆ z h₄))
+  (λ y z h₃ h₄ => and_elim h₁ # λ h₅ h₆ => eq_trans (h₆ y h₃) # eq_symm # h₆ z h₄))
 
 theorem exiu_intro {α : Type} {P : α → Prop} (x : α)
   (h₁ : P x) (h₂ : ∀ (y : α), P y → y = x) : ∃! (x : α), P x :=
