@@ -18,7 +18,7 @@ infix:50 (priority := high) " ∉ " => not_mem
 def empty (a : Set) : Prop :=
 ¬∃ b, b ∈ a
 
-def nonempty (a : Set) : Prop :=
+def nempty (a : Set) : Prop :=
 ¬empty a
 
 def is_set_succ (n n1 : Set) : Prop :=
@@ -32,7 +32,7 @@ infix:50 (priority := high) " ⊆ " => subset
 -- Axioms
 
 axiom ax_ext {a b} : (∀ c, c ∈ a ↔ c ∈ b) → a = b
-axiom ax_reg {a} : nonempty a → ∃ b, b ∈ a ∧ ¬∃ c, c ∈ b ∧ c ∈ a
+axiom ax_reg {a} : nempty a → ∃ b, b ∈ a ∧ ¬∃ c, c ∈ b ∧ c ∈ a
 axiom ax_spec a (P : Set → Prop) : ∃ b, ∀ c, c ∈ b ↔ c ∈ a ∧ P c
 axiom ax_union a : ∃ b, ∀ c d, (d ∈ c ∧ c ∈ a) → d ∈ b
 axiom ax_rep a (P : Set → Set → Prop) : (∀ b, b ∈ a → ∃! c, P b c) →
@@ -42,10 +42,10 @@ axiom ax_pow : ∀ a, ∃ b, ∀ c, c ⊆ a → c ∈ b
 
 -- Theorems
 
-theorem not_empty {a} : ¬empty a ↔ nonempty a :=
+theorem not_empty {a} : ¬empty a ↔ nempty a :=
 iff_refl
 
-theorem not_nonempty {a} : ¬nonempty a ↔ empty a :=
+theorem not_nempty {a} : ¬nempty a ↔ empty a :=
 iff_intro not_not_elim not_not_intro
 
 theorem subset_refl {a} : a ⊆ a :=
