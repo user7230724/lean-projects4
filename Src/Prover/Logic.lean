@@ -87,6 +87,9 @@ theorem em {P : Prop} : P ∨ ¬P := id
 theorem false_elim {P : Prop} (h : false) : P :=
 h P
 
+theorem exfalso {P : Prop} (h : false) : P :=
+false_elim h
+
 theorem mt {P Q : Prop} (h₁ : P → Q) (h₂ : ¬Q) : ¬P :=
 λ h₃ => h₂ # h₁ h₃
 
@@ -332,8 +335,14 @@ and_intro (and_left h₁) (and_right h₂)
 theorem iff_trans {P Q R  : Prop} (h₁ : P ↔ Q) (h₂ : Q ↔ R) : P ↔ R :=
 iff_intro (λ h₃ => mp h₂ # mp h₁ h₃) (λ h₃ => mpr h₁ # mpr h₂ h₃)
 
+theorem iff_trans' (Q : Prop) {P R  : Prop} (h₁ : P ↔ Q) (h₂ : Q ↔ R) : P ↔ R :=
+iff_trans h₁ h₂
+
 theorem eq_trans {α : Type} {x y z : α} (h₁ : x = y) (h₂ : y = z) : x = z :=
 eq_rec' (λ x => x = z) h₁ h₂
+
+theorem eq_trans' {α : Type} (y : α) {x z : α} (h₁ : x = y) (h₂ : y = z) : x = z :=
+eq_trans h₁ h₂
 
 theorem exiu_iff {α : Type} {P : α → Prop} :
   (∃! (x : α), P x) ↔ ∃ (x : α), P x ∧ ∀ (y : α), P y → y = x :=
