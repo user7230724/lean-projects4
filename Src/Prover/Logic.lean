@@ -357,3 +357,27 @@ mpr exiu_iff # exi_intro x # and_intro h₁ h₂
 
 theorem by_cases (P : Prop) {Q : Prop} (h₁ : P → Q) (h₂ : ¬P → Q) : Q :=
 or_elim em h₁ h₂
+
+theorem cpos {P Q : Prop} (h₁ : P) (h₂ : ¬Q → ¬P) : Q :=
+contra # λ h₃ => h₂ h₃ h₁
+
+theorem cpos' {P Q : Prop} (h₁ : ¬P) (h₂ : Q → P) : ¬Q :=
+mt h₂ h₁
+
+theorem ne_symm {α : Type} {x y : α} (h : x ≠ y) : y ≠ x :=
+cpos' h eq_symm
+
+theorem ne_symm' {α : Type} {x y : α} : x ≠ y ↔ y ≠ x :=
+iff_intro ne_symm ne_symm
+
+theorem cpos_pp {P Q : Prop} (h₁ : P) (h₂ : ¬Q → ¬P) : Q :=
+cpos h₁ h₂
+
+theorem cpos_pn {P Q : Prop} (h₁ : P) (h₂ : Q → ¬P) : ¬Q :=
+cpos h₁ # λ h₃ => h₂ # not_not_elim h₃
+
+theorem cpos_np {P Q : Prop} (h₁ : ¬P) (h₂ : ¬Q → P) : Q :=
+cpos h₁ # λ h₃ => not_not_intro # h₂ h₃
+
+theorem cpos_nn {P Q : Prop} (h₁ : ¬P) (h₂ : Q → P) : ¬Q :=
+cpos' h₁ h₂

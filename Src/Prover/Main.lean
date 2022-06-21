@@ -341,12 +341,27 @@ iff_intro
 (λ h => eq_rec' (λ x => subsingleton (upair x b)) h #
   eq_rec' subsingleton upair_self_eq subsingleton_singleton)
 
+theorem left_mem_upair {a b} : a ∈ upair a b :=
+mpr mem_upair # or_inl rfl
+
+theorem right_mem_upair {a b} : b ∈ upair a b :=
+mpr mem_upair # or_inr rfl
+
 end Unordered_pair
 
 section Ordered_pair
 
 def pair (a b : Set) : Set :=
 upair a (upair a b)
+
+theorem nonempty_pair {a b} : nonempty (pair a b) :=
+nonempty_upair
+
+theorem ne_of_mem {a b} (h : a ∈ b) : a ≠ b :=
+cpos_pn h # λ h₁ => eq_rec' (λ x => x ∉ b) h₁ mem_irrefl
+
+theorem not_subsingleton_pair {a b} : ¬subsingleton (pair a b) :=
+λ h => not_not_intro (mp subsingleton_upair_iff h) # ne_of_mem left_mem_upair
 
 theorem eq_left_of_pair_eq_pair {a b c d} (h : pair a b = pair c d) : a = c :=
 sorry
