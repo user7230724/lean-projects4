@@ -21,8 +21,8 @@ def empty (a : Set) : Prop :=
 def nempty (a : Set) : Prop :=
 ¬empty a
 
-def is_set_succ (n n1 : Set) : Prop :=
-∀ a, a ∈ n1 ↔ a ∈ n ∨ a = n1
+def is_succ (n1 n : Set) : Prop :=
+∀ a, a ∈ n1 ↔ a ∈ n ∨ a = n
 
 def subset (a b : Set) : Prop :=
 ∀ c, c ∈ a → c ∈ b
@@ -37,7 +37,7 @@ axiom ax_spec a (P : Set → Prop) : ∃ b, ∀ c, c ∈ b ↔ c ∈ a ∧ P c
 axiom ax_union a : ∃ b, ∀ c d, (d ∈ c ∧ c ∈ a) → d ∈ b
 axiom ax_rep a (P : Set → Set → Prop) : (∀ b, b ∈ a → ∃! c, P b c) →
   ∃ b, ∀ c, c ∈ a → ∃ d, d ∈ b ∧ P c d
-axiom ax_inf : ∃ a b, empty b ∧ b ∈ a ∧ ∀ c, c ∈ a → ∀ d, is_set_succ c d → d ∈ a
+axiom ax_inf : ∃ a b, empty b ∧ b ∈ a ∧ ∀ c, c ∈ a → ∀ d, is_succ d c → d ∈ a
 axiom ax_pow : ∀ a, ∃ b, ∀ c, c ⊆ a → c ∈ b
 
 -- Theorems

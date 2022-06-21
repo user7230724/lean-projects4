@@ -195,7 +195,95 @@ iff_intro
 def two : Set :=
 pwset 1
 
-#exit
+instance : OfNat Set (nat_lit 2) := ⟨two⟩
+
+theorem emp_subset {a} : ∅ ⊆ a :=
+λ b h => false_elim # not_mem_emp h
+
+theorem emp_mem_pwset {a} : emp ∈ pwset a :=
+mpr mem_pwset emp_subset
+
+theorem zero_mem_two : 0 ∈ 2 :=
+emp_mem_pwset
+
+theorem one_mem_two : 1 ∈ 2 :=
+mpr mem_pwset subset_refl
+
+theorem zero_ne_one : (0 : Set) ≠ 1 :=
+λ h => mem_irrefl # mpr (mp eq_iff h (λ x => 0 ∈ x)) zero_mem_one
+
+theorem zero_ne_two : (0 : Set) ≠ 2 :=
+λ h => mem_irrefl # mpr (mp eq_iff h (λ x => 0 ∈ x)) zero_mem_two
+
+theorem one_ne_two : (1 : Set) ≠ 2 :=
+λ h => mem_irrefl # mpr (mp eq_iff h (λ x => 1 ∈ x)) one_mem_two
+
+theorem eq_iff_mem {a b} : a = b ↔ ∀ c, c ∈ a ↔ c ∈ b :=
+iff_intro
+(λ h c => mp eq_iff h (λ x => c ∈ x))
+(λ h => ax_ext h)
+
+theorem one_eq_singleton_zero : 1 = singleton 0 :=
+mpr eq_iff_mem # λ a => iff_rec' (λ x => x ↔ a ∈ singleton 0) mem_one #
+iff_rec' (λ x => a = 0 ↔ x) mem_singleton iff_refl
+
+def subsingleton (a : Set) : Prop :=
+∀ (b c : Set), b ∈ a → c ∈ a → b = c
+
+theorem subsingleton_emp : subsingleton ∅ :=
+λ b c h => false_elim # not_mem_emp h
+
+theorem subsingleton_singleton {a} : subsingleton (singleton a) :=
+λ b c h₁ h₂ => eq_trans (mp mem_singleton h₁) (eq_symm # mp mem_singleton h₂)
+
+theorem subsingleton_zero : subsingleton 0 :=
+subsingleton_emp
+
+theorem subsingleton_one : subsingleton 1 :=
+eq_rec' subsingleton one_eq_singleton_zero subsingleton_singleton
+
+theorem subsingleton_iff {a} : subsingleton a ↔ a = ∅ ∨ ∃ b, a = singleton b :=
+iff_intro
+(λ h => by_cases (empty a)
+  (λ h₁ => or_inl # mp empty_iff_eq_emp h₁)
+  (λ h₁ => or_inr # nempty_elim (mp not_empty h₁) # λ b h₂ => exi_intro b #
+    mpr eq_iff_mem # λ c => iff_rec' (λ x => c ∈ a ↔ x) mem_singleton # iff_intro
+      (λ h₃ => h c b h₃ h₂) (λ h₃ => eq_rec' (λ x => x ∈ a) h₃ h₂)))
+(λ h => or_elim h
+  (λ h₁ => eq_rec' subsingleton h₁ subsingleton_emp)
+  (λ h₁ => exi_elim h₁ # λ b h₂ => eq_rec' subsingleton h₂ subsingleton_singleton))
+
+theorem subsingleton_elim (P : Set → Prop) {a}
+  (h₁ : subsingleton a) (h₂ : P ∅) (h₃ : ∀ b, P (singleton b)) : P a :=
+or_elim (mp subsingleton_iff h₁)
+(λ h₄ => eq_rec' P h₄ h₂)
+(λ h₄ => exi_elim h₄ # λ b h₅ => eq_rec' P h₅ # h₃ b)
+
+theorem subset_singleton {a b} : b ⊆ singleton a ↔ b = ∅ ∨ b = singleton a :=
+iff_intro
+(λ h => by_cases (empty b)
+  (λ h₂ => or_inl # mp empty_iff_eq_emp h₂)
+  (λ h₂ => or_inr # nempty_elim (mp not_empty h₂) # λ c h₃ => mpr eq_iff_mem # λ d =>
+    iff_intro (h d) # λ h₄ => eq_rec' (λ x => x ∈ b) (mp mem_singleton h₄) #
+      eq_rec' (λ x => x ∈ b) (eq_symm # mp mem_singleton # h c h₃) h₃))
+(λ h => or_elim h
+  (λ h₁ => eq_rec' (λ x => x ⊆ singleton a) h₁ emp_subset)
+  (λ h₁ => eq_rec' (λ x => x ⊆ singleton a) h₁ subset_refl))
+
+theorem subset_of_subsingleton {a b} (h : subsingleton a) : b ⊆ a ↔ b = ∅ ∨ b = a :=
+iff_intro
+(λ h₁ => subsingleton_elim (λ x => b ⊆ x → b = ∅ ∨ b = x) h
+  (λ h₂ => or_inl # mp subset_emp h₂) (λ c h₂ => mp subset_singleton h₂) h₁)
+(λ h₁ => or_elim h₁
+  (λ h₂ => eq_rec' (λ x => x ⊆ a) h₂ emp_subset)
+  (λ h₂ => eq_rec' (λ x => x ⊆ a) h₂ subset_refl))
+
+theorem mem_pwset_of_subsingleton {a b} (h : subsingleton a) :
+  b ∈ pwset a ↔ b = ∅ ∨ b = a :=
+iff_rec' (λ x => x ↔ b = ∅ ∨ b = a) mem_pwset # subset_of_subsingleton h
+
+theorem mem_two {a} : a ∈ 2 ↔ a = 0 ∨ a = 1 :=
+mem_pwset_of_subsingleton subsingleton_one
 
 -- Unordered pair
 
@@ -208,6 +296,17 @@ eq_rec' P (mp empty_iff_eq_emp h₁) h₂
 theorem nempty_upair {a b : Set} : nempty (upair a b) :=
 mpr nempty_image # nempty_some_inf
 
+theorem zero_mem_some_inf : 0 ∈ some_inf :=
+emp_mem_some_inf
+
+theorem is_succ_one_zero : is_succ 1 0 :=
+λ a => iff_intro (λ h => or_inr # mp mem_one h)
+(λ h => or_elim h (λ h₁ => false_elim # not_mem_zero h₁) (mpr mem_one))
+
+theorem one_mem_some_inf : 1 ∈ some_inf :=
+exi_elim (some_spec ax_inf) # λ a h => and_right (and_right h) 0
+zero_mem_some_inf 1 is_succ_one_zero
+
 theorem mem_upair {a b c} : c ∈ upair a b ↔ c = a ∨ c = b :=
 iff_intro
 (λ h => exi_elim (mp mem_image h) # λ d h₁ => split_ifs (λ x => x = c → c = a ∨ c = b)
@@ -215,4 +314,5 @@ iff_intro
 (λ h => mpr mem_image # or_elim h
   (λ h₁ => exi_intro ∅ # and_intro emp_mem_some_inf #
     eq_trans (if_pos empty_emp) (eq_symm h₁))
-  (λ h₁ => _)
+  (λ h₁ => exi_intro 1 # and_intro one_mem_some_inf #
+    eq_rec' (λ x => ite (empty 1) a b = x) h₁ # if_neg # mpr not_empty nempty_one))

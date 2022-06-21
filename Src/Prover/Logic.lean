@@ -345,3 +345,6 @@ iff_intro
 theorem exiu_intro {α : Type} {P : α → Prop} (x : α)
   (h₁ : P x) (h₂ : ∀ (y : α), P y → y = x) : ∃! (x : α), P x :=
 mpr exiu_iff # exi_intro x # and_intro h₁ h₂
+
+theorem by_cases (P : Prop) {Q : Prop} (h₁ : P → Q) (h₂ : ¬P → Q) : Q :=
+or_elim em h₁ h₂
