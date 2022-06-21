@@ -37,7 +37,7 @@ axiom ax_spec a (P : Set → Prop) : ∃ b, ∀ c, c ∈ b ↔ c ∈ a ∧ P c
 axiom ax_union a : ∃ b, ∀ c d, (d ∈ c ∧ c ∈ a) → d ∈ b
 axiom ax_rep a (P : Set → Set → Prop) : (∀ b, b ∈ a → ∃! c, P b c) →
   ∃ b, ∀ c, c ∈ a → ∃ d, d ∈ b ∧ P c d
-axiom ax_inf : ∃ a b, empty b ∧ b ∈ a ∧ ∀ c, c ∈ a → ∀ d, is_succ d c → d ∈ a
+axiom ax_inf : ∃ a, (∃ b, empty b ∧ b ∈ a) ∧ ∀ c, c ∈ a → ∀ d, is_succ d c → d ∈ a
 axiom ax_pow : ∀ a, ∃ b, ∀ c, c ⊆ a → c ∈ b
 
 @[instance] axiom ax_set_inhabited : Inhabited Set
@@ -55,3 +55,7 @@ theorem subset_refl {a} : a ⊆ a :=
 
 theorem subset_trans {a b c} (h₁ : a ⊆ b) (h₂ : b ⊆ c) : a ⊆ c :=
 λ d h₃ => h₂ d # h₁ d h₃
+
+theorem ax_inf' : ∃ a b, empty b ∧ b ∈ a ∧ ∀ c, c ∈ a → ∀ d, is_succ d c → d ∈ a :=
+exi_elim ax_inf # λ a h => and_elim h # λ h₁ h₂ => exi_elim h₁ # λ b h₃ =>
+exi_intro a # exi_intro b # mp and_assoc # and_intro h₃ h₂

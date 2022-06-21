@@ -22,7 +22,7 @@ theorem nonempty_iff {a} : nonempty a ↔ ∃ b, b ∈ a :=
 iff_intro not_not_elim not_not_intro
 
 theorem exi_empty : ∃ a, empty a :=
-exi_elim ax_inf # λ a h₁ => exi_elim h₁ # λ b h₂ => exi_intro b # and_left h₂
+exi_elim ax_inf' # λ a h₁ => exi_elim h₁ # λ b h₂ => exi_intro b # and_left h₂
 
 def emp : Set :=
 some' exi_empty
@@ -33,7 +33,7 @@ theorem empty_emp : empty ∅ :=
 some_spec exi_empty
 
 theorem exi_nonempty : ∃ a, nonempty a :=
-exi_elim ax_inf # λ a h₁ => exi_elim h₁ # λ b h₂ => exi_intro a #
+exi_elim ax_inf' # λ a h₁ => exi_elim h₁ # λ b h₂ => exi_intro a #
 nonempty_intro b # and_left # and_right h₂
 
 def filter (a : Set) (P : Set → Prop) : Set :=
@@ -109,10 +109,10 @@ iff_intro
 (λ h => eq_rec' empty h empty_emp)
 
 def some_inf : Set :=
-some' ax_inf
+some' ax_inf'
 
 theorem emp_mem_some_inf : ∅ ∈ some_inf :=
-exi_elim (some_spec ax_inf) # λ d h =>
+exi_elim (some_spec ax_inf') # λ d h =>
 eq_rec (λ x => x ∈ some_inf) (mp empty_iff_eq_emp # and_left h) #
 and_left # and_right h
 
@@ -284,7 +284,7 @@ theorem one_is_succ_zero : is_succ 1 0 :=
 (λ h => or_elim h (λ h₁ => exfalso # not_mem_zero h₁) (mpr mem_one))
 
 theorem one_mem_some_inf : 1 ∈ some_inf :=
-exi_elim (some_spec ax_inf) # λ a h => and_right (and_right h) 0
+exi_elim (some_spec ax_inf') # λ a h => and_right (and_right h) 0
 zero_mem_some_inf 1 one_is_succ_zero
 
 theorem mem_upair {a b c} : c ∈ upair a b ↔ c = a ∨ c = b :=

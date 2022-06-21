@@ -115,10 +115,30 @@ theorem succ_one : succ 1 = 2 :=
 mpr eq_iff_mem # λ a => iff_trans mem_succ # iff_symm # iff_trans mem_two #
 or_iff_or_right # iff_symm mem_one
 
-def nat_like (S : Set) : Prop :=
-0 ∈ S ∧ ∀ n, n ∈ S → succ n ∈ S
-
 theorem is_succ_iff {n1 n} : is_succ n1 n ↔ n1 = succ n :=
 iff_intro
 (λ h => mpr eq_iff_mem # λ a => iff_symm # iff_trans mem_succ # iff_symm # h a)
 (λ h => eq_rec' (λ x => is_succ x n) h succ_is_succ)
+
+def nat_like (S : Set) : Prop :=
+0 ∈ S ∧ ∀ n, n ∈ S → succ n ∈ S
+
+def ℕ : Set :=
+⋂ filter (powerset some_inf) nat_like
+
+theorem nat_like_some_inf : nat_like some_inf :=
+and_intro zero_mem_some_inf # λ n h => exi_elim (some_spec ax_inf') # λ a h₁ =>
+and_right (and_right h₁) n h (succ n) succ_is_succ
+
+theorem nat_subset_some_inf : ℕ ⊆ some_inf :=
+sorry
+
+theorem nat_like_of_subset {a b} (h₁ : a ⊆ b) (h₂ : nat_like a) : nat_like b :=
+sorry
+
+theorem nat_like_nat : nat_like ℕ :=
+sorry
+
+theorem nat_ind (P : Set → Prop) (h₁ : P 0) (h₂ : ∀ n, n ∈ ℕ → P n → P (succ n)) :
+  ∀ n, n ∈ ℕ → P n :=
+sorry
