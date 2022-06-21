@@ -68,35 +68,35 @@ mpr eq_iff_mem # λ c => iff_trans mem_insert # iff_intro
 
 end insert
 
-section intersect
+section inter
 
-def Intersect (a : Set) : Set :=
+def Inter (a : Set) : Set :=
 filter (⋃ a) # λ b => ∀ c, c ∈ a → b ∈ c
 
-prefix:110 (priority := high) "⋂ " => Intersect
+prefix:110 (priority := high) "⋂ " => Inter
 
-theorem mem_Intersect {a b} : b ∈ ⋂ a ↔ b ∈ ⋃ a ∧ ∀ c, c ∈ a → b ∈ c :=
+theorem mem_Inter {a b} : b ∈ ⋂ a ↔ b ∈ ⋃ a ∧ ∀ c, c ∈ a → b ∈ c :=
 iff_trans mem_filter iff_refl
 
-def intersect (a b : Set) : Set :=
+def inter (a b : Set) : Set :=
 ⋂ upair a b
 
-infixl:65 (priority := high) " ∩ " => intersect
+infixl:65 (priority := high) " ∩ " => inter
 
-theorem mem_intersect {a b c} : c ∈ a ∩ b ↔ c ∈ a ∧ c ∈ b :=
-iff_trans mem_Intersect # iff_intro
+theorem mem_inter {a b c} : c ∈ a ∩ b ↔ c ∈ a ∧ c ∈ b :=
+iff_trans mem_Inter # iff_intro
 (λ h => and_elim h # λ h₁ h₂ => and_intro (h₂ a left_mem_upair) (h₂ b right_mem_upair))
 (λ h => and_intro (mpr mem_union # or_of_and h) # λ d h₁ => or_elim (mp mem_upair h₁)
   (λ h₂ => mem_of_mem_of_eq' h₂ # and_left h)
   (λ h₂ => mem_of_mem_of_eq' h₂ # and_right h))
 
-theorem intersect_self {a} : a ∩ a = a :=
-mpr eq_iff_mem # λ b => iff_trans mem_intersect and_self
+theorem inter_self {a} : a ∩ a = a :=
+mpr eq_iff_mem # λ b => iff_trans mem_inter and_self
 
-theorem intersect_comm {a b} : a ∩ b = b ∩ a :=
-mpr eq_iff_mem # λ c => iff_trans mem_intersect # iff_trans' mem_intersect and_symm'
+theorem inter_comm {a b} : a ∩ b = b ∩ a :=
+mpr eq_iff_mem # λ c => iff_trans mem_inter # iff_trans' mem_inter and_symm'
 
-end intersect
+end inter
 
 def succ (n : Set) : Set :=
 insert n n
@@ -120,25 +120,52 @@ iff_intro
 (λ h => mpr eq_iff_mem # λ a => iff_symm # iff_trans mem_succ # iff_symm # h a)
 (λ h => eq_rec' (λ x => is_succ x n) h succ_is_succ)
 
-def nat_like (S : Set) : Prop :=
+def Nat_like (S : Set) : Prop :=
 0 ∈ S ∧ ∀ n, n ∈ S → succ n ∈ S
 
 def ℕ : Set :=
-⋂ filter (powerset some_inf) nat_like
+⋂ filter (powerset some_inf) Nat_like
 
-theorem nat_like_some_inf : nat_like some_inf :=
+theorem Nat_like_some_inf : Nat_like some_inf :=
 and_intro zero_mem_some_inf # λ n h => exi_elim (some_spec ax_inf') # λ a h₁ =>
 and_right (and_right h₁) n h (succ n) succ_is_succ
 
-theorem nat_subset_some_inf : ℕ ⊆ some_inf :=
+theorem Nat_subset_some_inf : ℕ ⊆ some_inf :=
+λ n h => and_right (mp mem_filter h) some_inf # mpr mem_filter #
+and_intro mem_powerset_self Nat_like_some_inf
+
+theorem zero_mem_Nat : 0 ∈ ℕ :=
+mpr mem_Inter # and_intro
+(mpr mem_Union # exi_intro some_inf # and_symm # and_intro zero_mem_some_inf #
+  mpr mem_filter # and_intro mem_powerset_self Nat_like_some_inf)
+(λ a h => and_left # and_right # mp mem_filter h)
+
+theorem zero_mem_of_Nat_like {a} (h : Nat_like a) : 0 ∈ a :=
+and_left h
+
+theorem succ_mem_of_Nat_like {a n} (h₁ : Nat_like a) (h₂ : n ∈ a) : succ n ∈ a :=
+and_right h₁ n h₂
+
+theorem Nat_subset_of_Nat_like {a} (h : Nat_like a) : ℕ ⊆ a :=
+λ n h₁ => hv (and_right (mp mem_filter h₁) some_inf) # λ h₂ => sorry
+
+#exit
+
+theorem succ_mem_Nat {n} (h : n ∈ ℕ) : succ n ∈ ℕ :=
+mpr mem_Inter # and_intro
+(mpr mem_Union # exi_intro some_inf # and_intro
+  (mpr mem_filter # and_intro mem_powerset_self Nat_like_some_inf)
+  (succ_mem_of_Nat_like Nat_like_some_inf # Nat_subset_some_inf n h))
+(λ a h₁ => _)
+
+#exit
+
+theorem Nat_like_Nat : Nat_like ℕ :=
 sorry
 
-theorem nat_like_of_subset {a b} (h₁ : a ⊆ b) (h₂ : nat_like a) : nat_like b :=
+theorem Nat_like_of_subset {a b} (h₁ : a ⊆ b) (h₂ : Nat_like a) : Nat_like b :=
 sorry
 
-theorem nat_like_nat : nat_like ℕ :=
-sorry
-
-theorem nat_ind (P : Set → Prop) (h₁ : P 0) (h₂ : ∀ n, n ∈ ℕ → P n → P (succ n)) :
+theorem Nat_ind (P : Set → Prop) (h₁ : P 0) (h₂ : ∀ n, n ∈ ℕ → P n → P (succ n)) :
   ∀ n, n ∈ ℕ → P n :=
 sorry
