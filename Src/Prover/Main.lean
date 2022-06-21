@@ -347,6 +347,15 @@ mpr mem_upair # or_inl rfl
 theorem right_mem_upair {a b} : b ∈ upair a b :=
 mpr mem_upair # or_inr rfl
 
+theorem mem_asymm {a b} (h : a ∈ b) : b ∉ a :=
+λ h₁ => exi_elim (ax_reg # nonempty_intro a left_mem_upair) # λ c h₂ =>
+and_elim h₂ @ λ h₃ h₄ => h₄ # or_elim (mp mem_upair h₃)
+  (λ h₅ => exi_intro b # and_intro (eq_rec' (λ x => b ∈ x) h₅ h₁) right_mem_upair)
+  (λ h₅ => exi_intro a # and_intro (eq_rec' (λ x => a ∈ x) h₅ h) left_mem_upair)
+
+theorem mem_antisymm {a b} (h₁ : a ∈ b) (h₂ : b ∈ a) : a = b :=
+false_elim # mem_asymm h₁ h₂
+
 end Unordered_pair
 
 section Ordered_pair
@@ -364,10 +373,25 @@ theorem not_subsingleton_pair {a b} : ¬subsingleton (pair a b) :=
 λ h => not_not_intro (mp subsingleton_upair_iff h) # ne_of_mem left_mem_upair
 
 theorem eq_left_of_pair_eq_pair {a b c d} (h : pair a b = pair c d) : a = c :=
-sorry
+or_elim (mp mem_upair # mp (mp eq_iff_mem h a) left_mem_upair) id #
+λ h₁ => exfalso #
+or_elim (mp mem_upair # mp (mp eq_iff_mem h (upair a b)) right_mem_upair)
+(λ h₂ => hv (eq_rec' (λ x => c ∈ x) h₁ left_mem_upair) # λ h₃ =>
+  mem_asymm h₃ # eq_rec (λ x => a ∈ x) h₂ left_mem_upair)
+(λ h₂ => hv (eq_trans h₁ # eq_symm h₂) # λ h₃ =>
+  mem_irrefl # eq_rec' (λ x => a ∈ x) h₃ left_mem_upair)
 
 theorem eq_right_of_pair_eq_pair {a b c d} (h : pair a b = pair c d) : b = d :=
-sorry
+hv (eq_left_of_pair_eq_pair h) # λ h₁ =>
+or_elim (mp mem_upair # mp (mp eq_iff_mem h # upair a b) right_mem_upair)
+(λ h₂ => exfalso # mem_irrefl #
+  eq_rec' (λ x => a ∈ x) (eq_trans h₁ # eq_symm h₂) left_mem_upair)
+(λ h₂ => hv (mp (iff_rec (λ x => x ↔ _) mem_upair # mp eq_iff_mem h₂ b) # or_inr rfl) #
+  λ h₃ => or_elim (or_symm # mp mem_upair h₃) id #
+  λ h₄ => hv (eq_rec (λ x => upair c x = _) h₄ # eq_rec (λ x => upair x b = _) h₁ h₂) #
+  λ h₆ => hv (eq_rec (λ x => upair c d = x) upair_self_eq # eq_symm h₆) #
+  λ h₇ => eq_trans h₄ # mp subsingleton_upair_iff #
+  eq_rec' subsingleton h₇ subsingleton_singleton)
 
 theorem eq_and_eq_of_pair_eq_pair {a b c d} (h : pair a b = pair c d) : a = c ∧ b = d :=
 and_intro (eq_left_of_pair_eq_pair h) (eq_right_of_pair_eq_pair h)

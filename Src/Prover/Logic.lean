@@ -381,3 +381,6 @@ cpos h₁ # λ h₃ => not_not_intro # h₂ h₃
 
 theorem cpos_nn {P Q : Prop} (h₁ : ¬P) (h₂ : Q → P) : ¬Q :=
 cpos' h₁ h₂
+
+theorem hv {P Q : Prop} (h₁ : P) (h₂ : P → Q) : Q :=
+h₂ h₁
