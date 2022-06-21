@@ -1,3 +1,10 @@
+import Lean
+
+section
+open Lean Elab Term
+elab "!" tm:term : term => elabTermEnsuringType tm none
+end
+
 namespace prover
 noncomputable section
 

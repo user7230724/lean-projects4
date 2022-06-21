@@ -40,6 +40,8 @@ axiom ax_rep a (P : Set → Set → Prop) : (∀ b, b ∈ a → ∃! c, P b c) �
 axiom ax_inf : ∃ a b, empty b ∧ b ∈ a ∧ ∀ c, c ∈ a → ∀ d, is_succ d c → d ∈ a
 axiom ax_pow : ∀ a, ∃ b, ∀ c, c ⊆ a → c ∈ b
 
+@[instance] axiom ax_set_inhabited : Inhabited Set
+
 -- Theorems
 
 theorem not_empty {a} : ¬empty a ↔ nonempty a :=

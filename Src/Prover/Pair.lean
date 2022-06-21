@@ -25,7 +25,7 @@ theorem exi_empty : ∃ a, empty a :=
 exi_elim ax_inf # λ a h₁ => exi_elim h₁ # λ b h₂ => exi_intro b # and_left h₂
 
 def emp : Set :=
-some exi_empty
+some' exi_empty
 
 notation (priority := high) "∅" => emp
 
@@ -37,7 +37,7 @@ exi_elim ax_inf # λ a h₁ => exi_elim h₁ # λ b h₂ => exi_intro a #
 nonempty_intro b # and_left # and_right h₂
 
 def filter (a : Set) (P : Set → Prop) : Set :=
-some # ax_spec a P
+some' # ax_spec a P
 
 theorem mem_filter {P : Set → Prop} {a b} : b ∈ filter a P ↔ b ∈ a ∧ P b :=
 some_spec (ax_spec a P) b
@@ -54,7 +54,7 @@ theorem exiu_pred_of_fun {α β : Type} {f : α → β} {x : α} :
 exiu_intro (f x) rfl # λ y h => eq_symm h
 
 def image_aux (a : Set) (f : Set → Set) : Set :=
-some # ax_rep a (pred_of_fun f) # λ b h => exiu_pred_of_fun
+some' # ax_rep a (pred_of_fun f) # λ b h => exiu_pred_of_fun
 
 theorem mem_image_aux_of {f : Set → Set} {a b}
   (h : ∃ c, c ∈ a ∧ f c = b) : b ∈ image_aux a f :=
@@ -73,7 +73,7 @@ iff_intro
 (λ h => mpr mem_filter # and_intro (mem_image_aux_of h) h)
 
 def singleton (a : Set) : Set :=
-image (some exi_nonempty) # λ b => a
+image (some' exi_nonempty) # λ b => a
 
 theorem mem_singleton {a b} : b ∈ singleton a ↔ b = a :=
 iff_intro
@@ -109,7 +109,7 @@ iff_intro
 (λ h => eq_rec' empty h empty_emp)
 
 def some_inf : Set :=
-some ax_inf
+some' ax_inf
 
 theorem emp_mem_some_inf : ∅ ∈ some_inf :=
 exi_elim (some_spec ax_inf) # λ d h =>
@@ -123,11 +123,11 @@ theorem ne_singleton_self {a} : a ≠ singleton a :=
 λ h => mem_irrefl # eq_symm h (λ x => a ∈ x) mem_singleton_self
 
 def powerset (a : Set) : Set :=
-filter (some # ax_pow a) # λ b => b ⊆ a
+filter (some' # ax_pow a) # λ b => b ⊆ a
 
 theorem mem_powerset {a b} : b ∈ powerset a ↔ b ⊆ a :=
 iff_intro
-(λ h => and_right (mp (@mem_filter (λ x => x ⊆ a) _ _) h))
+(λ h => and_right (!mp mem_filter h))
 (λ h => mpr mem_filter # and_intro (some_spec (ax_pow a) b h) h)
 
 theorem mem_powerset_self {a} : a ∈ powerset a :=
@@ -139,32 +139,7 @@ iff_intro
 (λ h => ax_ext h)
 
 theorem ne_powerset_self {a} : a ≠ powerset a :=
-λ h => @mem_irrefl a # mpr (mp eq_iff_mem h a) mem_powerset_self
-
-section Conditional
-
-theorem exi_ite_val {α : Type} (P : Prop) (x y : α) :
-  ∃ (z : α), (P → z = x) ∧ (¬P → z = y) :=
-prop_rec (λ m => ∃ (z : α), (m → z = x) ∧ (¬m → z = y))
-(exi_intro x # and_intro (λ _ => rfl) (λ h => exfalso # h trivial))
-(exi_intro y # and_intro exfalso (λ _ => rfl))
-
-def ite {α : Type} (P : Prop) (x y : α) : α :=
-some # exi_ite_val P x y
-
-theorem if_pos {α : Type} {P : Prop} {x y : α} (h : P) : ite P x y = x :=
-and_left (some_spec # exi_ite_val P x y) h
-
-theorem if_neg {α : Type} {P : Prop} {x y : α} (h : ¬P) : ite P x y = y :=
-and_right (some_spec # exi_ite_val P x y) h
-
-theorem split_ifs {α : Type} (F : α → Prop) {P : Prop} {x y : α}
-  (h₁ : P → F x) (h₂ : ¬P → F y) : F (ite P x y) :=
-or_elim (@em P)
-(λ h₃ => eq_rec' F (if_pos h₃) # h₁ h₃)
-(λ h₃ => eq_rec' F (if_neg h₃) # h₂ h₃)
-
-end Conditional
+λ h => !mem_irrefl # mpr (mp eq_iff_mem h a) mem_powerset_self
 
 section Natural_numbers
 
@@ -349,7 +324,7 @@ mpr mem_upair # or_inr rfl
 
 theorem mem_asymm {a b} (h : a ∈ b) : b ∉ a :=
 λ h₁ => exi_elim (ax_reg # nonempty_intro a left_mem_upair) # λ c h₂ =>
-and_elim h₂ @ λ h₃ h₄ => h₄ # or_elim (mp mem_upair h₃)
+and_elim h₂ # λ h₃ h₄ => h₄ # or_elim (mp mem_upair h₃)
   (λ h₅ => exi_intro b # and_intro (eq_rec' (λ x => b ∈ x) h₅ h₁) right_mem_upair)
   (λ h₅ => exi_intro a # and_intro (eq_rec' (λ x => a ∈ x) h₅ h) left_mem_upair)
 
