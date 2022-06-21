@@ -356,6 +356,9 @@ and_elim h₂ @ λ h₃ h₄ => h₄ # or_elim (mp mem_upair h₃)
 theorem mem_antisymm {a b} (h₁ : a ∈ b) (h₂ : b ∈ a) : a = b :=
 false_elim # mem_asymm h₁ h₂
 
+theorem ne_of_mem {a b} (h : a ∈ b) : a ≠ b :=
+cpos_pn h # λ h₁ => eq_rec' (λ x => x ∉ b) h₁ mem_irrefl
+
 end Unordered_pair
 
 section Ordered_pair
@@ -365,9 +368,6 @@ upair a (upair a b)
 
 theorem nonempty_pair {a b} : nonempty (pair a b) :=
 nonempty_upair
-
-theorem ne_of_mem {a b} (h : a ∈ b) : a ≠ b :=
-cpos_pn h # λ h₁ => eq_rec' (λ x => x ∉ b) h₁ mem_irrefl
 
 theorem not_subsingleton_pair {a b} : ¬subsingleton (pair a b) :=
 λ h => not_not_intro (mp subsingleton_upair_iff h) # ne_of_mem left_mem_upair
