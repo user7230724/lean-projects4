@@ -146,24 +146,27 @@ and_left h
 theorem succ_mem_of_Nat_like {a n} (h₁ : Nat_like a) (h₂ : n ∈ a) : succ n ∈ a :=
 and_right h₁ n h₂
 
-theorem Nat_subset_of_Nat_like {a} (h : Nat_like a) : ℕ ⊆ a :=
-λ n h₁ => hv (and_right (mp mem_filter h₁) some_inf) # λ h₂ => sorry
-
-#exit
+theorem Nat_subset_of_subset_some_inf_of_Nat_like {a}
+  (h₁ : Nat_like a) (h₂ : a ⊆ some_inf) : ℕ ⊆ a :=
+λ n h₃ => and_right (mp mem_filter h₃) a # mpr mem_filter #
+and_intro (mpr mem_powerset h₂) h₁
 
 theorem succ_mem_Nat {n} (h : n ∈ ℕ) : succ n ∈ ℕ :=
 mpr mem_Inter # and_intro
 (mpr mem_Union # exi_intro some_inf # and_intro
   (mpr mem_filter # and_intro mem_powerset_self Nat_like_some_inf)
   (succ_mem_of_Nat_like Nat_like_some_inf # Nat_subset_some_inf n h))
-(λ a h₁ => sorry)
-
-#exit
+(λ a h₁ => and_elim (mp mem_filter h₁) # λ h₂ h₃ =>
+  hv (Nat_subset_of_subset_some_inf_of_Nat_like h₃ (mp mem_powerset h₂) n h) #
+  succ_mem_of_Nat_like h₃)
 
 theorem Nat_like_Nat : Nat_like ℕ :=
-sorry
+and_intro zero_mem_Nat # λ _ => succ_mem_Nat
 
-theorem Nat_like_of_subset {a b} (h₁ : a ⊆ b) (h₂ : Nat_like a) : Nat_like b :=
+theorem Nat_subset_of_Nat_like {a} (h : Nat_like a) : ℕ ⊆ a :=
+λ n h₁ => hv (and_right (mp mem_filter h₁) some_inf) # λ h₂ => sorry
+
+theorem Nat_like_of_subset {a b} (h₁ : Nat_like a) (h₂ : a ⊆ b) : Nat_like b :=
 sorry
 
 theorem Nat_ind (P : Set → Prop) (h₁ : P 0) (h₂ : ∀ n, n ∈ ℕ → P n → P (succ n)) :
