@@ -133,7 +133,7 @@ iff_intro
 theorem mem_pwset_self {a} : a ∈ pwset a :=
 mpr mem_pwset subset_refl
 
--- Conditional
+section Conditional
 
 theorem exi_ite_val {α : Type} (P : Prop) (x y : α) :
   ∃ (z : α), (P → z = x) ∧ (¬P → z = y) :=
@@ -156,9 +156,9 @@ or_elim (@em P)
 (λ h₃ => eq_rec' F (if_pos h₃) # h₁ h₃)
 (λ h₃ => eq_rec' F (if_neg h₃) # h₂ h₃)
 
--- Natural numbers
+end Conditional
 
--- #exit
+section Natural_numbers
 
 def zero : Set := ∅
 
@@ -285,7 +285,9 @@ iff_rec' (λ x => x ↔ b = ∅ ∨ b = a) mem_pwset # subset_of_subsingleton h
 theorem mem_two {a} : a ∈ 2 ↔ a = 0 ∨ a = 1 :=
 mem_pwset_of_subsingleton subsingleton_one
 
--- Unordered pair
+end Natural_numbers
+
+section Unordered_pair
 
 def upair (a b : Set) : Set :=
 image some_inf # λ c => ite (empty c) a b
@@ -316,3 +318,8 @@ iff_intro
     eq_trans (if_pos empty_emp) (eq_symm h₁))
   (λ h₁ => exi_intro 1 # and_intro one_mem_some_inf #
     eq_rec' (λ x => ite (empty 1) a b = x) h₁ # if_neg # mpr not_empty nempty_one))
+
+end Unordered_pair
+
+theorem ne_pwset_self {a} : a ≠ pwset a :=
+λ h => @mem_irrefl a # mpr (mp eq_iff_mem h a) mem_pwset_self
