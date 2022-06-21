@@ -1,9 +1,7 @@
 import Lean
 
-section
-open Lean Elab Term
-elab "!" tm:term : term => elabTermEnsuringType tm none
-end
+section open Lean Elab Term
+elab "!" tm:term : term => elabTermEnsuringType tm none end
 
 namespace prover
 noncomputable section
@@ -67,6 +65,7 @@ expandExplicitBinders ``exiu xs b end
 -- Axioms
 
 axiom prop_rec (F : Prop → Prop) {P : Prop} : F true → F false → F P
+axiom funext {α β : Type} {f g : α → β} : (∀ x, f x = g x) → f = g
 
 -- Theorems
 
@@ -387,3 +386,9 @@ cpos' h₁ h₂
 
 theorem hv {P Q : Prop} (h₁ : P) (h₂ : P → Q) : Q :=
 h₂ h₁
+
+theorem or_iff_or_left {P Q R : Prop} (h : P ↔ Q) : R ∨ P ↔ R ∨ Q :=
+iff_rec' (λ x => R ∨ x ↔ _) h iff_refl
+
+theorem or_iff_or_right {P Q R : Prop} (h : P ↔ Q) : P ∨ R ↔ Q ∨ R :=
+iff_rec' (λ x => x ∨ R ↔ _) h iff_refl

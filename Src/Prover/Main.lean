@@ -1,4 +1,4 @@
-import Src.Prover.Func
+import Src.Prover.Nat
 
 namespace prover
 noncomputable section
