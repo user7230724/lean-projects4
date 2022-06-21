@@ -141,7 +141,7 @@ iff_intro
 theorem ne_powerset_self {a} : a ≠ powerset a :=
 λ h => !mem_irrefl # mpr (mp eq_iff_mem h a) mem_powerset_self
 
-section Natural_numbers
+section natural_numbers
 
 def zero : Set := ∅
 
@@ -263,9 +263,9 @@ iff_rec' (λ x => x ↔ b = ∅ ∨ b = a) mem_powerset # subset_of_subsingleton
 theorem mem_two {a} : a ∈ 2 ↔ a = 0 ∨ a = 1 :=
 mem_powerset_of_subsingleton subsingleton_one
 
-end Natural_numbers
+end natural_numbers
 
-section Unordered_pair
+section unordered_pair
 
 def upair (a b : Set) : Set :=
 image some_inf # λ c => ite (empty c) a b
@@ -279,13 +279,13 @@ mpr nonempty_image # nonempty_some_inf
 theorem zero_mem_some_inf : 0 ∈ some_inf :=
 emp_mem_some_inf
 
-theorem is_succ_one_zero : is_succ 1 0 :=
+theorem one_is_succ_zero : is_succ 1 0 :=
 λ a => iff_intro (λ h => or_inr # mp mem_one h)
 (λ h => or_elim h (λ h₁ => exfalso # not_mem_zero h₁) (mpr mem_one))
 
 theorem one_mem_some_inf : 1 ∈ some_inf :=
 exi_elim (some_spec ax_inf) # λ a h => and_right (and_right h) 0
-zero_mem_some_inf 1 is_succ_one_zero
+zero_mem_some_inf 1 one_is_succ_zero
 
 theorem mem_upair {a b c} : c ∈ upair a b ↔ c = a ∨ c = b :=
 iff_intro
@@ -309,7 +309,7 @@ theorem subsingleton_upair_iff {a b} : subsingleton (upair a b) ↔ a = b :=
 iff_intro
 (λ h => or_elim (mp subsingleton_iff h)
   (λ h₁ => exfalso # mpr not_nonempty (mpr empty_iff_eq_emp h₁) nonempty_upair)
-  (λ h₁ => exi_elim h₁ # λ c h₂ => eq_trans' c
+  (λ h₁ => exi_elim h₁ # λ c h₂ => eq_trans
     (mp mem_singleton # mp (mp eq_iff_mem h₂ a) # mpr mem_upair # or_inl rfl)
     (eq_symm # mp mem_singleton # mp (mp eq_iff_mem h₂ b) #
        mpr mem_upair # or_inr rfl)))
@@ -334,9 +334,9 @@ false_elim # mem_asymm h₁ h₂
 theorem ne_of_mem {a b} (h : a ∈ b) : a ≠ b :=
 cpos_pn h # λ h₁ => eq_rec' (λ x => x ∉ b) h₁ mem_irrefl
 
-end Unordered_pair
+end unordered_pair
 
-section Ordered_pair
+section ordered_pair
 
 def pair (a b : Set) : Set :=
 upair a (upair a b)
@@ -390,4 +390,4 @@ theorem snd_eq {a b} : snd (pair a b) = b :=
 exi_elim (some_spec (exi_intro b # exi_intro a rfl : ∃ c d, pair a b = pair d c)) #
 λ c h => eq_symm # right_eq_of_pair_eq_pair h
 
-end Ordered_pair
+end ordered_pair

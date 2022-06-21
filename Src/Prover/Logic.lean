@@ -331,19 +331,25 @@ iff_intro iff_assoc_aux
 (λ h => iff_symm # iff_rec' (λ x => R ↔ x) iff_symm' #
   iff_assoc_aux # iff_rec' (λ x => x ↔ P) iff_symm' # iff_symm h)
 
-theorem and_trans {P Q R  : Prop} (h₁ : P ∧ Q) (h₂ : Q ∧ R) : P ∧ R :=
+theorem and_trans {P Q R : Prop} (h₁ : P ∧ Q) (h₂ : Q ∧ R) : P ∧ R :=
 and_intro (and_left h₁) (and_right h₂)
 
-theorem iff_trans {P Q R  : Prop} (h₁ : P ↔ Q) (h₂ : Q ↔ R) : P ↔ R :=
+theorem iff_trans {P Q R : Prop} (h₁ : P ↔ Q) (h₂ : Q ↔ R) : P ↔ R :=
 iff_intro (λ h₃ => mp h₂ # mp h₁ h₃) (λ h₃ => mpr h₁ # mpr h₂ h₃)
 
-theorem iff_trans' (Q : Prop) {P R  : Prop} (h₁ : P ↔ Q) (h₂ : Q ↔ R) : P ↔ R :=
+theorem iff_trans' {P Q R : Prop} (h₁ : P ↔ Q) (h₂ : R ↔ Q) : R ↔ P :=
+iff_symm # iff_trans h₁ # iff_symm h₂
+
+theorem iff_trans_with (Q : Prop) {P R : Prop} (h₁ : P ↔ Q) (h₂ : Q ↔ R) : P ↔ R :=
 iff_trans h₁ h₂
 
 theorem eq_trans {α : Type} {x y z : α} (h₁ : x = y) (h₂ : y = z) : x = z :=
 eq_rec' (λ x => x = z) h₁ h₂
 
-theorem eq_trans' {α : Type} (y : α) {x z : α} (h₁ : x = y) (h₂ : y = z) : x = z :=
+theorem eq_trans' {a : Type} {P Q R : α} (h₁ : P = Q) (h₂ : R = Q) : R = P :=
+eq_symm # eq_trans h₁ # eq_symm h₂
+
+theorem eq_trans_with {α : Type} (y : α) {x z : α} (h₁ : x = y) (h₂ : y = z) : x = z :=
 eq_trans h₁ h₂
 
 theorem exiu_iff {α : Type} {P : α → Prop} :
@@ -392,3 +398,6 @@ iff_rec' (λ x => R ∨ x ↔ _) h iff_refl
 
 theorem or_iff_or_right {P Q R : Prop} (h : P ↔ Q) : P ∨ R ↔ Q ∨ R :=
 iff_rec' (λ x => x ∨ R ↔ _) h iff_refl
+
+theorem or_of_and {P Q : Prop} (h : P ∧ Q) : P ∨ Q :=
+or_inl # and_left h
