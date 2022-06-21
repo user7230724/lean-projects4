@@ -60,7 +60,13 @@ theorem mem_of_mem_of_eq {a b c} (h₁ : a = b) (h₂ : c ∈ a) : c ∈ b :=
 mp (mp eq_iff_mem h₁ c) h₂
 
 theorem mem_of_mem_of_eq' {a b c} (h₁ : a = b) (h₂ : c ∈ b) : c ∈ a :=
-mp (mp eq_iff_mem (eq_symm h₁) c) h₂
+mem_of_mem_of_eq (eq_symm h₁) h₂
+
+theorem mem_of_mem_of_eq₁ {a b c} (h₁ : a = b) (h₂ : a ∈ c) : b ∈ c :=
+eq_rec (λ x => x ∈ c) h₁ h₂
+
+theorem mem_of_mem_of_eq₁' {a b c} (h₁ : a = b) (h₂ : b ∈ c) : a ∈ c :=
+mem_of_mem_of_eq₁ (eq_symm h₁) h₂
 
 theorem insert_eq_of_mem {a b} (h : b ∈ a) : insert a b = a :=
 mpr eq_iff_mem # λ c => iff_trans mem_insert # iff_intro
@@ -163,12 +169,21 @@ mpr mem_Inter # and_intro
 theorem Nat_like_Nat : Nat_like ℕ :=
 and_intro zero_mem_Nat # λ _ => succ_mem_Nat
 
-theorem Nat_subset_of_Nat_like {a} (h : Nat_like a) : ℕ ⊆ a :=
-λ n h₁ => hv (and_right (mp mem_filter h₁) some_inf) # λ h₂ => sorry
+theorem succ_ne_zero {n} : succ n ≠ 0 :=
+λ h => mpr empty_iff_eq_emp h # exi_intro n # mpr mem_succ # or_inr rfl
 
-theorem Nat_like_of_subset {a b} (h₁ : Nat_like a) (h₂ : a ⊆ b) : Nat_like b :=
-sorry
+theorem zero_ne_succ {n} : 0 ≠ succ n :=
+ne_symm succ_ne_zero
 
-theorem Nat_ind (P : Set → Prop) (h₁ : P 0) (h₂ : ∀ n, n ∈ ℕ → P n → P (succ n)) :
-  ∀ n, n ∈ ℕ → P n :=
-sorry
+theorem succ_inj_aux {m n a} (h₁ : succ m = succ n) (h₂ : a ∈ m) : a ∈ n :=
+hv (iff_trans (mp eq_iff_mem h₁ a) mem_succ) # λ h₃ =>
+hv (iff_symm # iff_trans (iff_symm h₃) mem_succ) # λ h₄ =>
+or_elim (mp h₄ # or_inl h₂) id # λ h₅ => exfalso #
+hv (iff_trans (mp eq_iff_mem h₁ m) mem_succ) # λ h₆ =>
+hv (iff_symm # iff_trans (iff_symm h₆) mem_succ) # λ h₇ =>
+or_elim (mp h₇ # or_inr rfl)
+(λ h₈ => mem_asymm h₈ # mem_of_mem_of_eq₁ h₅ h₂)
+(λ h₈ => @mem_irrefl a # mem_of_mem_of_eq' (eq_trans h₅ # eq_symm h₈) h₂)
+
+theorem succ_inj {m n} (h : succ m = succ n) : m = n :=
+mpr eq_iff_mem # λ a => iff_intro (succ_inj_aux h) (succ_inj_aux # eq_symm h)
