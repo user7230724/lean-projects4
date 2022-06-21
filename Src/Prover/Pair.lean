@@ -347,7 +347,7 @@ nonempty_upair
 theorem not_subsingleton_pair {a b} : ¬subsingleton (pair a b) :=
 λ h => not_not_intro (mp subsingleton_upair_iff h) # ne_of_mem left_mem_upair
 
-theorem eq_left_of_pair_eq_pair {a b c d} (h : pair a b = pair c d) : a = c :=
+theorem left_eq_of_pair_eq_pair {a b c d} (h : pair a b = pair c d) : a = c :=
 or_elim (mp mem_upair # mp (mp eq_iff_mem h a) left_mem_upair) id #
 λ h₁ => exfalso #
 or_elim (mp mem_upair # mp (mp eq_iff_mem h (upair a b)) right_mem_upair)
@@ -356,8 +356,8 @@ or_elim (mp mem_upair # mp (mp eq_iff_mem h (upair a b)) right_mem_upair)
 (λ h₂ => hv (eq_trans h₁ # eq_symm h₂) # λ h₃ =>
   mem_irrefl # eq_rec' (λ x => a ∈ x) h₃ left_mem_upair)
 
-theorem eq_right_of_pair_eq_pair {a b c d} (h : pair a b = pair c d) : b = d :=
-hv (eq_left_of_pair_eq_pair h) # λ h₁ =>
+theorem right_eq_of_pair_eq_pair {a b c d} (h : pair a b = pair c d) : b = d :=
+hv (left_eq_of_pair_eq_pair h) # λ h₁ =>
 or_elim (mp mem_upair # mp (mp eq_iff_mem h # upair a b) right_mem_upair)
 (λ h₂ => exfalso # mem_irrefl #
   eq_rec' (λ x => a ∈ x) (eq_trans h₁ # eq_symm h₂) left_mem_upair)
@@ -369,11 +369,25 @@ or_elim (mp mem_upair # mp (mp eq_iff_mem h # upair a b) right_mem_upair)
   eq_rec' subsingleton h₇ subsingleton_singleton)
 
 theorem eq_and_eq_of_pair_eq_pair {a b c d} (h : pair a b = pair c d) : a = c ∧ b = d :=
-and_intro (eq_left_of_pair_eq_pair h) (eq_right_of_pair_eq_pair h)
+and_intro (left_eq_of_pair_eq_pair h) (right_eq_of_pair_eq_pair h)
 
 theorem pair_ext {a b c d} : pair a b = pair c d ↔ a = c ∧ b = d :=
 iff_intro eq_and_eq_of_pair_eq_pair #
 λ h₁ => eq_rec' (λ x => pair x b = pair c d) (and_left h₁) #
 eq_rec' (λ x => pair c x = pair c d) (and_right h₁) rfl
+
+def fst (a : Set) : Set :=
+some # λ b => ∃ c, a = pair b c
+
+def snd (a : Set) : Set :=
+some # λ b => ∃ c, a = pair c b
+
+theorem fst_eq {a b} : fst (pair a b) = a :=
+exi_elim (some_spec (exi_intro a # exi_intro b rfl : ∃ c d, pair a b = pair c d)) #
+λ c h => eq_symm # left_eq_of_pair_eq_pair h
+
+theorem snd_eq {a b} : snd (pair a b) = b :=
+exi_elim (some_spec (exi_intro b # exi_intro a rfl : ∃ c d, pair a b = pair d c)) #
+λ c h => eq_symm # right_eq_of_pair_eq_pair h
 
 end Ordered_pair

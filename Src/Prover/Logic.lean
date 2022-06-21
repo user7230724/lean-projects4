@@ -53,20 +53,16 @@ infixl:50 (priority := high) " ≠ " => ne
 def exi {α : Type} (P : α → Prop) : Prop :=
 ¬(∀ (x : α), ¬P x)
 
-section
-open Lean
+section open Lean
 macro (priority := high) "∃ " xs:explicitBinders ", " b:term : term =>
-expandExplicitBinders ``exi xs b
-end
+expandExplicitBinders ``exi xs b end
 
 def exiu {α : Type} (P : α → Prop) : Prop :=
 (∃ (x : α), P x) ∧ (∀ (x y : α), P x → P y → x = y)
 
-section
-open Lean
+section open Lean
 macro (priority := high) "∃! " xs:explicitBinders ", " b:term : term =>
-expandExplicitBinders ``exiu xs b
-end
+expandExplicitBinders ``exiu xs b end
 
 -- Axioms
 

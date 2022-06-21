@@ -4,10 +4,21 @@ namespace prover
 noncomputable section
 
 axiom some {α : Type} [Inhabited α] (P : α → Prop) : α
-axiom some_spec {α : Type} [Inhabited α] {P : α → Prop} (h : ∃ (x : α), P x) : P (some P)
+axiom some_spec {α : Type} [Inhabited α] {P : α → Prop}
+  (h : ∃ (x : α), P x) : P (some P)
+
+def someu {α : Type} [Inhabited α] (P : α → Prop) : α :=
+some # λ a => P a ∧ ∀ b, P b → b = a
 
 def some' {α : Type} [Inhabited α] {P : α → Prop} (h : ∃ (x : α), P x) : α :=
 some P
+
+def someu' {α : Type} [Inhabited α] {P : α → Prop} (h : ∃! (x : α), P x) : α :=
+someu P
+
+theorem someu_spec {α : Type} [Inhabited α] {P : α → Prop}
+  (h : ∃! (x : α), P x) : P (someu P) :=
+and_left # !some_spec # mp exiu_iff h
 
 section Conditional
 
