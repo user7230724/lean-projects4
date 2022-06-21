@@ -200,9 +200,48 @@ theorem filter_subset_self {P : Set → Prop} {a} : filter a P ⊆ a :=
 theorem filter_subset_of_subset {P : Set → Prop} {a b} (h : a ⊆ b) : filter a P ⊆ b :=
 λ c h₁ => h c # and_left # mp mem_filter h₁
 
-theorem Nat_ind (P : Set → Prop) (h₁ : P 0) (h₂ : ∀ n, n ∈ ℕ → P n → P (succ n)) :
-  ∀ n, n ∈ ℕ → P n :=
-λ n h₃ => hv (Nat_like_filter_of_ind P Nat_like_Nat h₁ h₂) # λ h₄ =>
+theorem Nat_ind (P : Set → Prop) {n}
+  (h : n ∈ ℕ) (h₁ : P 0) (h₂ : ∀ n, n ∈ ℕ → P n → P (succ n)) : P n :=
+hv (Nat_like_filter_of_ind P Nat_like_Nat h₁ h₂) # λ h₄ =>
 hv (Nat_subset_of_subset_some_inf_of_Nat_like h₄
 (filter_subset_of_subset Nat_subset_some_inf)) # λ h₅ =>
-and_right # mp mem_filter (h₅ n h₃)
+and_right # mp mem_filter (h₅ n h)
+
+theorem ne_succ_self {n} (h : n ∈ ℕ) : n ≠ succ n :=
+Nat_ind (λ x => x ≠ succ x) h zero_ne_succ #
+λ n h₁ h₂ => cpos_nn h₂ # λ h₂ => succ_inj h₂
+
+section pred
+
+def pred (n : Set) : Set :=
+some (λ k => succ k = n)
+
+theorem pred_succ {n} : pred (succ n) = n :=
+succ_inj # @some_spec _ _ (λ k => succ k = succ n) # exi_intro n rfl
+
+theorem pred_one : pred 1 = 0 :=
+eq_rec (λ x => pred x = 0) succ_zero pred_succ
+
+end pred
+
+section le
+
+def le (m n : Set) : Prop :=
+∃ (f : Set → Set), f 0 = m ∧ (∀ (k : Set), k ∈ ℕ → f (succ k) = succ (f k)) ∧
+∃ (k : Set), k ∈ ℕ ∧ f k = n
+
+infix:50 (priority := high) " ≤ " => le
+
+theorem zero_le {n} (h : n ∈ ℕ) : 0 ≤ n :=
+exi_intro id # and_intro rfl # and_intro (λ _ _ => rfl) # exi_intro n # and_intro h rfl
+
+-- theorem succ_le_succ {m n} (h₁ : m ∈ ℕ) (h₂ : n ∈ ℕ) : succ m ≤ succ n ↔ m ≤ n :=
+-- iff_intro
+-- (λ h => exi_elim h # λ f h₃ => exi_intro (λ x => pred (f x)) # and_elim h₃ # λ h₃ h₄ =>
+--   and_elim h₄ # λ h₄ h₅ => and_intro (eq_rec' (λ x => pred x = m) h₃ pred_succ) #
+--   and_intro
+--     (λ k hk => _)
+--     (_))
+-- (λ h => _)
+
+end le

@@ -346,7 +346,7 @@ iff_trans h₁ h₂
 theorem eq_trans {α : Type} {x y z : α} (h₁ : x = y) (h₂ : y = z) : x = z :=
 eq_rec' (λ x => x = z) h₁ h₂
 
-theorem eq_trans' {a : Type} {P Q R : α} (h₁ : P = Q) (h₂ : R = Q) : R = P :=
+theorem eq_trans' {α : Type} {P Q R : α} (h₁ : P = Q) (h₂ : R = Q) : R = P :=
 eq_symm # eq_trans h₁ # eq_symm h₂
 
 theorem eq_trans_with {α : Type} (y : α) {x z : α} (h₁ : x = y) (h₂ : y = z) : x = z :=
