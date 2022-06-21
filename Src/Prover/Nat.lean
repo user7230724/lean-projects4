@@ -156,7 +156,7 @@ mpr mem_Inter # and_intro
 (mpr mem_Union # exi_intro some_inf # and_intro
   (mpr mem_filter # and_intro mem_powerset_self Nat_like_some_inf)
   (succ_mem_of_Nat_like Nat_like_some_inf # Nat_subset_some_inf n h))
-(λ a h₁ => _)
+(λ a h₁ => sorry)
 
 #exit
 
