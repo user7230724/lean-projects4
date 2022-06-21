@@ -51,9 +51,9 @@ end union
 section insert
 
 def insert (a b : Set) : Set :=
-b ∪ singleton a
+a ∪ singleton b
 
-theorem mem_insert {a b c} : c ∈ insert a b ↔ c ∈ b ∨ c = a :=
+theorem mem_insert {a b c} : c ∈ insert a b ↔ c ∈ a ∨ c = b :=
 iff_trans mem_union # iff_rec' (λ x => _ ∨ x ↔ _) mem_singleton iff_refl
 
 theorem mem_of_mem_of_eq {a b c} (h₁ : a = b) (h₂ : c ∈ a) : c ∈ b :=
@@ -62,9 +62,9 @@ mp (mp eq_iff_mem h₁ c) h₂
 theorem mem_of_mem_of_eq' {a b c} (h₁ : a = b) (h₂ : c ∈ b) : c ∈ a :=
 mp (mp eq_iff_mem (eq_symm h₁) c) h₂
 
-theorem insert_eq_of_mem {a b} (h : a ∈ b) : insert a b = b :=
+theorem insert_eq_of_mem {a b} (h : b ∈ a) : insert a b = a :=
 mpr eq_iff_mem # λ c => iff_trans mem_insert # iff_intro
-(λ h₁ => or_elim h₁ id # λ h₂ => eq_rec' (λ x => x ∈ b) h₂ h) (λ h₁ => or_inl h₁)
+(λ h₁ => or_elim h₁ id # λ h₂ => eq_rec' (λ x => x ∈ a) h₂ h) (λ h₁ => or_inl h₁)
 
 end insert
 
