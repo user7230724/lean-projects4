@@ -187,3 +187,22 @@ or_elim (mp h₇ # or_inr rfl)
 
 theorem succ_inj {m n} (h : succ m = succ n) : m = n :=
 mpr eq_iff_mem # λ a => iff_intro (succ_inj_aux h) (succ_inj_aux # eq_symm h)
+
+theorem Nat_like_filter_of_ind (P : Set → Prop) {a} (h : Nat_like a)
+  (h₁ : P 0) (h₂ : ∀ n, n ∈ a → P n → P (succ n)) : Nat_like (filter a P) :=
+and_intro (mpr mem_filter # and_intro (zero_mem_of_Nat_like h) h₁) #
+λ n h₃ => mpr mem_filter # and_elim (mp mem_filter h₃) # λ h₄ h₅ =>
+and_symm # and_intro (h₂ n h₄ h₅) # succ_mem_of_Nat_like h h₄
+
+theorem filter_subset_self {P : Set → Prop} {a} : filter a P ⊆ a :=
+λ b h => and_left # mp mem_filter h
+
+theorem filter_subset_of_subset {P : Set → Prop} {a b} (h : a ⊆ b) : filter a P ⊆ b :=
+λ c h₁ => h c # and_left # mp mem_filter h₁
+
+theorem Nat_ind (P : Set → Prop) (h₁ : P 0) (h₂ : ∀ n, n ∈ ℕ → P n → P (succ n)) :
+  ∀ n, n ∈ ℕ → P n :=
+λ n h₃ => hv (Nat_like_filter_of_ind P Nat_like_Nat h₁ h₂) # λ h₄ =>
+hv (Nat_subset_of_subset_some_inf_of_Nat_like h₄
+(filter_subset_of_subset Nat_subset_some_inf)) # λ h₅ =>
+and_right # mp mem_filter (h₅ n h₃)
