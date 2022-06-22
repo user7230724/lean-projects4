@@ -235,13 +235,84 @@ infix:50 (priority := high) " ≤ " => le
 theorem zero_le {n} (h : n ∈ ℕ) : 0 ≤ n :=
 exi_intro id # and_intro rfl # and_intro (λ _ _ => rfl) # exi_intro n # and_intro h rfl
 
--- theorem succ_le_succ {m n} (h₁ : m ∈ ℕ) (h₂ : n ∈ ℕ) : succ m ≤ succ n ↔ m ≤ n :=
--- iff_intro
--- (λ h => exi_elim h # λ f h₃ => exi_intro (λ x => pred (f x)) # and_elim h₃ # λ h₃ h₄ =>
---   and_elim h₄ # λ h₄ h₅ => and_intro (eq_rec' (λ x => pred x = m) h₃ pred_succ) #
---   and_intro
---     (λ k hk => _)
---     (_))
--- (λ h => _)
+theorem le_of_succ_le_succ {m n}
+  (h₁ : m ∈ ℕ) (h₂ : n ∈ ℕ) (h : succ m ≤ succ n) : m ≤ n :=
+exi_elim h # λ f h₃ => exi_intro (λ x => pred (f x)) # and_elim h₃ # λ h₃ h₄ =>
+and_elim h₄ # λ h₄ h₅ => and_intro (eq_rec' (λ x => pred x = m) h₃ pred_succ) #
+and_intro
+(λ k hk => eq_rec' (λ x => pred x = succ (pred (f k))) (h₄ k hk) #
+  eq_rec' (λ x => x = succ (pred (f k))) pred_succ # eq_symm #
+  Nat_ind (λ x => succ (pred (f x)) = f x) hk
+  (eq_rec' (λ x => succ (pred x) = x) h₃ # congr_arg pred_succ) #
+  λ k hk ih => eq_rec' (λ x => succ (pred x) = x) (h₄ k hk) # congr_arg pred_succ)
+(exi_elim h₅ # λ k hk => and_elim hk # λ hk h₆ => exi_intro k # and_intro hk #
+  eq_rec' (λ x => pred x = n) h₆ pred_succ)
+
+theorem succ_le_succ_of_le {m n}
+  (h₁ : m ∈ ℕ) (h₂ : n ∈ ℕ) (h : m ≤ n) : succ m ≤ succ n :=
+exi_elim h # λ f h₃ => exi_intro (λ x => succ (f x)) # and_elim h₃ # λ h₃ h₄ =>
+and_elim h₄ # λ h₄ h₅ => and_intro (congr_arg h₃) # and_intro
+(λ k hk => eq_rec' (λ x => succ x = _) (h₄ k hk) rfl)
+(exi_elim h₅ # λ k hk => and_elim hk # λ hk h₆ => exi_intro k # and_intro hk #
+  congr_arg h₆)
+
+theorem succ_le_succ_iff {m n} (h₁ : m ∈ ℕ) (h₂ : n ∈ ℕ) : succ m ≤ succ n ↔ m ≤ n :=
+iff_intro (le_of_succ_le_succ h₁ h₂) (succ_le_succ_of_le h₁ h₂)
+
+theorem le_refl {n} (h : n ∈ ℕ) : n ≤ n :=
+Nat_ind (λ x => x ≤ x) h (zero_le zero_mem_Nat) #
+λ n h ih => succ_le_succ_of_le h h ih
+
+theorem le_succ_of_le {m n} (h₁ : m ∈ ℕ) (h₂ : n ∈ ℕ) (h₃ : m ≤ n) : m ≤ succ n :=
+exi_elim h₃ # λ f h₁ => exi_intro f # and_elim h₁ # λ h₁ h₂ => and_elim h₂ #
+λ h₂ h₃ => and_intro h₁ # and_intro h₂ # exi_elim h₃ # λ k hk => and_elim hk #
+λ hk h₄ => exi_intro (succ k) # and_intro (succ_mem_Nat hk) # eq_trans (h₂ k hk) #
+congr_arg h₄
+
+theorem le_succ_self {n} (h : n ∈ ℕ) : n ≤ succ n :=
+le_succ_of_le h h # le_refl h
+
+theorem not_succ_le_zero {n} (h : n ∈ ℕ) : ¬succ n ≤ 0 :=
+λ h₁ => exi_elim h₁ # λ f h₁ => and_elim h₁ # λ h₁ h₂ => and_elim h₂ # λ h₂ h₃ =>
+exi_elim h₃ # λ k h₃ => and_elim h₃ # λ h₃ h₄ => Nat_ind (λ x => f x ≠ 0) h₃
+(eq_rec' (λ x => x ≠ 0) h₁ succ_ne_zero)
+(λ k h₃ ih => eq_rec' (λ x => x ≠ 0) (h₂ k h₃) succ_ne_zero) h₄
+
+def lt (m n : Set) : Prop :=
+m ≤ n ∧ m ≠ n
+
+infix:50 (priority := high) " < " => lt
+
+theorem lt_iff_le_and_ne {m n} (h₁ : m ∈ ℕ) (h₂ : n ∈ ℕ) : m < n ↔ m ≤ n ∧ m ≠ n :=
+iff_refl
+
+theorem le_of_eq {m n} (h₁ : m ∈ ℕ) (h₂ : n ∈ ℕ) (h₃ : m = n) : m ≤ n :=
+eq_rec' (λ x => x ≤ n) h₃ # le_refl h₂
+
+theorem eq_iff_lt_or_eq {m n} (h₁ : m ∈ ℕ) (h₂ : n ∈ ℕ) : m ≤ n ↔ m < n ∨ m = n :=
+iff_intro (λ h => by_cases (m = n) or_inr # λ h₃ => or_inl # and_intro h h₃)
+(λ h => or_elim h and_left # le_of_eq h₁ h₂)
+
+theorem not_succ_le_self {n} (h : n ∈ ℕ) : ¬succ n ≤ n :=
+Nat_ind (λ x => ¬succ x ≤ x) h (not_succ_le_zero zero_mem_Nat) #
+λ n h ih => cpos_nn ih # λ ih => le_of_succ_le_succ (succ_mem_Nat h) h ih
+
+theorem Nat_cases (P : Set → Prop) {n}
+  (h₁ : n ∈ ℕ) (h₂ : P 0) (h₃ : ∀ n, n ∈ ℕ → P (succ n)) : P n :=
+Nat_ind P h₁ h₂ # λ n h ih => h₃ n h
+
+theorem eq_zero_or_succ {n} (h : n ∈ ℕ) : n = 0 ∨ ∃ m, n = succ m :=
+Nat_cases (λ x => x = 0 ∨ ∃ m, x = succ m) h (or_inl rfl) #
+λ n h => or_inr # exi_intro n rfl
+
+-- theorem lt_succ_iff_le {m n} (h₁ : m ∈ ℕ) (h₂ : n ∈ ℕ) : m < succ n ↔ m ≤ n :=
+-- sorry
+
+-- theorem Nat_strong_ind (P : Set → Prop) {n} (h : n ∈ ℕ)
+--   (h₁ : )
+
+-- theorem le_trans {m n k} (h₁ : m ∈ ℕ) (h₂ : n ∈ ℕ) (h₃ : k ∈ ℕ)
+--   (h₄ : m ≤ n) (h₅ : n ≤ k) : m ≤ k :=
+-- _
 
 end le

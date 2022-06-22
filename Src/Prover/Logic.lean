@@ -401,3 +401,13 @@ iff_rec' (λ x => x ∨ R ↔ _) h iff_refl
 
 theorem or_of_and {P Q : Prop} (h : P ∧ Q) : P ∨ Q :=
 or_inl # and_left h
+
+theorem congr_fun {α β : Type} {f g : α → β} {a : α} (h : f = g) : f a = g a :=
+eq_rec' (λ x => x a = g a) h rfl
+
+theorem congr_arg {α β : Type} {f : α → β} {a b : α} (h : a = b) : f a = f b :=
+eq_rec' (λ x => f x = f b) h rfl
+
+theorem congr {α β : Type} {f g : α → β} {a b : α}
+  (h₁ : f = g) (h₂ : a = b) : f a = g b :=
+eq_trans (congr_fun h₁) # congr_arg h₂
